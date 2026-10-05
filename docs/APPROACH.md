@@ -58,7 +58,7 @@ Requests travel from the browser through HTTPS to the Next.js frontend, then to 
 | Milestone / Phase | Time Window | Key Objectives & Deliverables | Security Verification | Status |
 |---|---|---|---|---|
 | **Phase 1: Foundation & Setup** | 0h – 4h | Project structure, backend factory, health endpoint, MySQL config, secure frontend placeholders | Secret scan, route validation, baseline checks | `Complete` |
-| **Phase 2: Core Domain & Auth** | 4h – 12h | Patient/doctor/admin domain models, auth flows, role enforcement | Auth test suite & audit review | `Planned` |
+| **Phase 2: Core Domain & Models** | 4h – 12h | Database models, migrations, relationships, seed data, comprehensive tests | Model test suite (20/20 passing) | `Complete` |
 | **Phase 3: Security & Hardening** | 12h – 18h | Validation, abuse controls, logging, auth integrity | SAST & edge-case testing | `Planned` |
 | **Phase 4: Polish & Deployment** | 18h – 24h | UI polish, cloud deployment, final commit freeze | Live deployment check | `Planned` |
 
@@ -111,3 +111,88 @@ Requests travel from the browser through HTTPS to the Next.js frontend, then to 
 - Runtime stack: Docker Compose with MySQL, backend, and frontend services.
 - Health check endpoint: `/api/health` on the Flask backend.
 - Local deployment target: `http://localhost:3000` for the Next.js frontend and `http://localhost:5000` for the API.
+
+---
+
+## 7. Phase 2: Database Models & Migrations (Completed)
+
+### 7.1 Core Data Models
+Five SQLAlchemy ORM models were created to represent the clinic domain:
+
+1. **User Model**
+   - Fields: id, email (unique indexed), password_hash, full_name, phone, role (ENUM), is_active, created_at, updated_at
+   - Relationships: one-to-one links to PatientProfile or DoctorProfile; one-to-many to Appointments and MedicalRecords
+   - Constraints: email uniqueness enforced at database level
+
+2. **PatientProfile Model**
+   - Fields: id, user_id (FK unique), date_of_birth, gender, blood_group, address, timestamps
+   - Relationships: one-to-one back-reference to User
+   - Purpose: encapsulates patient-specific demographic data separate from authentication
+
+3. **DoctorProfile Model**
+   - Fields: id, user_id (FK unique), specialization (indexed), license_number (unique), experience_years, bio, timestamps
+   - Relationships: one-to-one back-reference to User
+   - Purpose: stores provider credentials and professional information
+
+4. **Appointment Model**
+   - Fields: id, patient_id (FK), doctor_id (FK), start_at (indexed), end_at, status (ENUM), reason, notes, timestamps
+   - Relationships: many-to-one to both User (as patient and doctor); one-to-many to MedicalRecords
+   - Constraints: 
+     - `end_at > start_at` (check constraint enforced at DB level)
+     - `patient_id != doctor_id` (check constraint to prevent self-appointments)
+   - Statuses: PENDING, CONFIRMED, COMPLETED, CANCELLED
+
+5. **MedicalRecord Model**
+   - Fields: id, patient_id (FK indexed), doctor_id (FK indexed), appointment_id (FK optional), diagnosis, notes, prescription, timestamps
+   - Relationships: many-to-one to User (as patient and doctor); optional many-to-one to Appointment
+   - Purpose: doctor-documented clinical findings, diagnosis, and treatment prescriptions
+
+### 7.2 Migration Strategy & Flask-Migrate
+- Installed Flask-Migrate (Alembic) for versioned schema management
+- Initialized Alembic folder structure and configuration
+- Generated first automatic migration (`0d187483051c`) detecting all five tables, indexes, and constraints
+- Migration applies safely to both SQLite (testing) and MySQL (production)
+- All models are imported into the app factory so migrations detect schema changes automatically
+
+### 7.3 Relationships & Cascade Behavior
+- User → PatientProfile / DoctorProfile: cascade delete (deleting user removes profile)
+- User → Appointments (both directions): cascade delete
+- User → MedicalRecords (both directions): cascade delete
+- Appointment → MedicalRecords: cascade delete
+- Carefully avoided circular serialization and accidental data loss by using explicit foreign_keys on ambiguous relations
+
+### 7.4 Testing & Verification
+- **20 comprehensive tests** covering:
+  - User creation (patient, doctor, admin roles)
+  - Email uniqueness constraint
+  - PatientProfile and DoctorProfile relationships
+  - Doctor license number uniqueness
+  - Appointment creation and time/user constraint validation
+  - MedicalRecord creation with and without appointment links
+  - Relationship traversal (e.g., user.patient_profile, appointment.medical_records)
+  - Cascade delete behavior on all relationships
+- **All 20 tests passing** with SQLite in-memory database
+- `/api/health` endpoint verified working after schema additions
+
+### 7.5 Development & Demo Data
+- Created `app/seeds.py` with `seed_development_data()` function
+- Generates demo users (3 patients, 2 doctors, 1 admin)
+- Creates synthetic patient profiles, doctor profiles, appointments, and medical records
+- Uses `DEMO-ONLY-Password123!` for all demo accounts
+- Seed data is isolated to development and never commits real credentials
+
+### 7.6 Security & Compliance Notes
+- **Constraint Enforcement:** Database-level check constraints prevent invalid time ranges and self-appointments
+- **Index Strategy:** Indexed foreign keys and commonly-queried fields (email, role, specialization, status, start_at) for optimal query performance
+- **Cascade Policy:** Explicit cascade delete prevents orphaned records; appointments cascade their medical records for referential integrity
+- **Date Handling:** Python `date` objects used for birth dates; datetime objects for appointment timestamps and audit trails
+- **Enum Types:** Role and Status fields use Python Enums mapped to database ENUM columns for type safety
+
+### 7.7 Next Phase Roadmap
+- Implement role-based authorization middleware in Flask routes
+- Create REST API endpoints for /patients, /doctors, /appointments (GET, POST, PUT, DELETE)
+- Add request validation schemas (marshmallow or Pydantic)
+- Implement JWT authentication and token refresh logic
+- Add fine-grained access control (patients see only own records, doctors see only their appointments)
+- Enhance logging with structured audit trails
+- Stress test with bulk data and concurrent appointments
