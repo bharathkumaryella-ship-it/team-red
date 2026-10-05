@@ -67,6 +67,48 @@ def seed_development_data():
             role=UserRole.DOCTOR,
             is_active=True,
         ),
+        User(
+            email="doctor3@demo.local",
+            full_name="Dr. Sarah Chen",
+            phone="555-1003",
+            role=UserRole.DOCTOR,
+            is_active=True,
+        ),
+        User(
+            email="doctor4@demo.local",
+            full_name="Dr. Robert Wilson",
+            phone="555-1004",
+            role=UserRole.DOCTOR,
+            is_active=True,
+        ),
+        User(
+            email="doctor5@demo.local",
+            full_name="Dr. Aisha Patel",
+            phone="555-1005",
+            role=UserRole.DOCTOR,
+            is_active=True,
+        ),
+        User(
+            email="doctor6@demo.local",
+            full_name="Dr. James Miller",
+            phone="555-1006",
+            role=UserRole.DOCTOR,
+            is_active=True,
+        ),
+        User(
+            email="doctor7@demo.local",
+            full_name="Dr. Elena Rostova",
+            phone="555-1007",
+            role=UserRole.DOCTOR,
+            is_active=True,
+        ),
+        User(
+            email="doctor8@demo.local",
+            full_name="Dr. David Kim",
+            phone="555-1008",
+            role=UserRole.DOCTOR,
+            is_active=True,
+        ),
     ]
     for user in doctors:
         user.set_password("DEMO-ONLY-Password123!")
@@ -124,6 +166,48 @@ def seed_development_data():
             license_number="MD-DAVIS-002",
             experience_years=8,
             bio="Comprehensive primary care and patient wellness.",
+        ),
+        DoctorProfile(
+            user_id=doctors[2].id,
+            specialization="Pediatrics",
+            license_number="MD-CHEN-003",
+            experience_years=12,
+            bio="Board-certified pediatrician providing comprehensive child and adolescent healthcare.",
+        ),
+        DoctorProfile(
+            user_id=doctors[3].id,
+            specialization="Neurology",
+            license_number="MD-WILSON-004",
+            experience_years=18,
+            bio="Expertise in adult neurology, migraines, memory disorders, and neuro-diagnostics.",
+        ),
+        DoctorProfile(
+            user_id=doctors[4].id,
+            specialization="Dermatology",
+            license_number="MD-PATEL-005",
+            experience_years=10,
+            bio="Specializing in medical and surgical dermatology, skin cancer screenings, and eczema.",
+        ),
+        DoctorProfile(
+            user_id=doctors[5].id,
+            specialization="Orthopedics",
+            license_number="MD-MILLER-006",
+            experience_years=14,
+            bio="Orthopedic specialist focusing on joint restoration, sports injuries, and rehabilitation.",
+        ),
+        DoctorProfile(
+            user_id=doctors[6].id,
+            specialization="Psychiatry",
+            license_number="MD-ROSTOVA-007",
+            experience_years=11,
+            bio="Compassionate mental health professional specializing in mood and anxiety disorders.",
+        ),
+        DoctorProfile(
+            user_id=doctors[7].id,
+            specialization="Oncology",
+            license_number="MD-KIM-008",
+            experience_years=16,
+            bio="Dedicated oncologist with extensive experience in targeted therapies and clinical care.",
         ),
     ]
     db.session.add_all(doctor_profiles)

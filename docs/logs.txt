@@ -8650,7 +8650,7 @@ Agent Response Summary:
 Explained the unified /login architecture that routes users to their respective dashboards based on role and clarified why public self-registration is restricted to Patients for clinical security. Provided credentials for the pre-seeded Doctor and Admin test accounts.
 
 Commit SHA:
-658833e
+061c1e3
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
@@ -8658,3 +8658,36 @@ Files Modified / Created:
 Actions Taken:
 * Inspected src/frontend/app/login/page.tsx and confirmed role-based routing.
 * Documented doctor, patient, and admin credential workflows and dashboard entry points.
+
+================================================================================
+[2026-10-05T23:25:12+05:30] Adding diverse medical specialist doctors
+================================================================================
+User Prompt (verbatim):
+add more doctors
+
+Agent Response:
+Expanded the clinic doctor roster in src/backend/app/seeds.py to 8 doctors spanning key medical specializations:
+1. Dr. Elizabeth Brown — Cardiology (doctor1@demo.local)
+2. Dr. Michael Davis — General Practice (doctor2@demo.local)
+3. Dr. Sarah Chen — Pediatrics (doctor3@demo.local)
+4. Dr. Robert Wilson — Neurology (doctor4@demo.local)
+5. Dr. Aisha Patel — Dermatology (doctor5@demo.local)
+6. Dr. James Miller — Orthopedics (doctor6@demo.local)
+7. Dr. Elena Rostova — Psychiatry (doctor7@demo.local)
+8. Dr. David Kim — Oncology (doctor8@demo.local)
+
+Populated their clinical profiles (experience, medical licenses, and bios) and executed the seed procedure to update the development database.
+
+Agent Response Summary:
+Expanded the doctors list from 2 to 8 doctors with various medical specializations in src/backend/app/seeds.py and refreshed the local database.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/backend/app/seeds.py (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added 6 additional doctor profiles to src/backend/app/seeds.py across multiple clinical specialties.
+* Executed seed_development_data() to update the local SQLite database.
