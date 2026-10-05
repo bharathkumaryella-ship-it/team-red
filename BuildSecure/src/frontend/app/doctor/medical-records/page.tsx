@@ -3,17 +3,43 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api';
 import { Appointment, AppointmentListing } from '@/lib/appointments';
+import { useToast } from '../../components/toast-provider';
+import {
+  FileText,
+  Plus,
+  Edit3,
+  Calendar,
+  User,
+  Pill,
+  Save,
+  CheckCircle,
+  AlertCircle,
+  Search,
+  ClipboardList
+} from 'lucide-react';
 
-type RecordItem = { id: number; appointment_id: number; diagnosis: string; notes: string | null; prescription: string | null; patient: { id: number; full_name: string } };
+type RecordItem = {
+  id: number;
+  appointment_id: number;
+  diagnosis: string;
+  notes: string | null;
+  prescription: string | null;
+  patient: { id: number; full_name: string };
+};
+
 type RecordListing = { data: RecordItem[]; pagination: { page: number; pages: number; total: number } };
 
 export default function DoctorMedicalRecordsPage() {
   const [records, setRecords] = useState<RecordListing | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selected, setSelected] = useState<RecordItem | null>(null);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { success, error: showError } = useToast();
+
   async function load() {
+    setLoading(true);
     try {
       const [recordResult, appointmentResult] = await Promise.all([
         apiRequest<RecordListing>('/doctor/medical-records'),
@@ -22,34 +48,356 @@ export default function DoctorMedicalRecordsPage() {
       setRecords(recordResult);
       const existing = new Set(recordResult.data.map((record) => record.appointment_id));
       setAppointments(appointmentResult.data.filter((item) => !existing.has(item.id)));
-      setError('');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to load medical records.'); }
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'Unable to load medical records.');
+    } finally {
+      setLoading(false);
+    }
   }
-  useEffect(() => { void load(); }, []);
+
+  useEffect(() => {
+    void load();
+  }, []);
+
   async function create(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); const form = new FormData(event.currentTarget);
+    event.preventDefault();
+    setSaving(true);
+    const form = new FormData(event.currentTarget);
     try {
-      await apiRequest('/medical-records', { method: 'POST', body: { appointment_id: Number(form.get('appointment_id')), diagnosis: form.get('diagnosis'), notes: form.get('notes'), prescription: form.get('prescription') } });
-      event.currentTarget.reset(); setNotice('Medical record created.'); await load();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to create record.'); }
+      await apiRequest('/medical-records', {
+        method: 'POST',
+        body: {
+          appointment_id: Number(form.get('appointment_id')),
+          diagnosis: form.get('diagnosis'),
+          notes: form.get('notes'),
+          prescription: form.get('prescription'),
+        },
+      });
+      event.currentTarget.reset();
+      success('Clinical record created successfully.');
+      await load();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'Unable to create medical record.');
+    } finally {
+      setSaving(false);
+    }
   }
+
   async function open(id: number) {
-    try { const result = await apiRequest<{ data: RecordItem }>(`/doctor/medical-records/${id}`); setSelected(result.data); setError(''); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Unable to load record.'); }
-  }
-  async function update(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (!selected) return; const form = new FormData(event.currentTarget);
     try {
-      const result = await apiRequest<{ data: RecordItem }>(`/doctor/medical-records/${selected.id}`, { method: 'PATCH', body: { diagnosis: form.get('diagnosis'), notes: form.get('notes'), prescription: form.get('prescription') } });
-      setSelected(result.data); setNotice('Medical record updated.'); await load();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to update record.'); }
+      const result = await apiRequest<{ data: RecordItem }>(`/doctor/medical-records/${id}`);
+      setSelected(result.data);
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'Unable to load record details.');
+    }
   }
-  return <main className="container page-shell"><section className="panel"><p className="eyebrow">Doctor portal</p><h1>Medical records</h1>
-    {error && <p className="form-error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
-    <h2>New record from completed appointment</h2>
-    <form className="stack-form" onSubmit={create}><label>Completed appointment<select name="appointment_id" required defaultValue=""><option value="" disabled>Select an appointment</option>{appointments.map((item) => <option key={item.id} value={item.id}>#{item.id} · {item.patient?.full_name || 'Patient'} · {new Date(item.start_at).toLocaleString()}</option>)}</select></label>
-      <label>Diagnosis<textarea name="diagnosis" required maxLength={2000} /></label><label>Notes<textarea name="notes" maxLength={10000} /></label><label>Prescription<textarea name="prescription" maxLength={5000} /></label><button className="primary-button" disabled={!appointments.length}>Create record</button></form>
-    <h2>Existing records</h2><ul className="record-list">{records?.data.map((record) => <li key={record.id}><button className="secondary-button" onClick={() => void open(record.id)}>Record #{record.id} · {record.patient.full_name}</button><p>{record.diagnosis}</p></li>)}</ul>
-    {selected && <form className="stack-form panel" onSubmit={update}><h2>Edit record #{selected.id} · {selected.patient.full_name}</h2><label>Diagnosis<textarea name="diagnosis" required maxLength={2000} defaultValue={selected.diagnosis} /></label><label>Notes<textarea name="notes" maxLength={10000} defaultValue={selected.notes || ''} /></label><label>Prescription<textarea name="prescription" maxLength={5000} defaultValue={selected.prescription || ''} /></label><button className="primary-button">Save changes</button></form>}
-  </section></main>;
+
+  async function update(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selected) return;
+    setSaving(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      const result = await apiRequest<{ data: RecordItem }>(`/doctor/medical-records/${selected.id}`, {
+        method: 'PATCH',
+        body: {
+          diagnosis: form.get('diagnosis'),
+          notes: form.get('notes'),
+          prescription: form.get('prescription'),
+        },
+      });
+      setSelected(result.data);
+      success(`Record #${selected.id} updated successfully.`);
+      await load();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'Unable to update medical record.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const filteredRecords = records?.data.filter((r) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      r.patient.full_name.toLowerCase().includes(q) ||
+      r.diagnosis.toLowerCase().includes(q) ||
+      (r.prescription && r.prescription.toLowerCase().includes(q))
+    );
+  });
+
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <div className="page-header-content">
+          <h1>Medical Records Management</h1>
+          <p>Author and maintain diagnostic records, clinical treatment logs, and patient prescriptions.</p>
+        </div>
+      </div>
+
+      <div className="content-grid two-col" style={{ alignItems: 'start' }}>
+        {/* Left Form: Create or Edit */}
+        <div className="card">
+          <div className="card-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {selected ? <Edit3 size={18} color="var(--color-primary)" /> : <Plus size={18} color="var(--color-primary)" />}
+              <h3>{selected ? `Edit Record #${selected.id} (${selected.patient.full_name})` : 'New Clinical Record'}</h3>
+            </div>
+            {selected && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setSelected(null)}
+              >
+                Switch to New Record
+              </button>
+            )}
+          </div>
+
+          <div className="card-body">
+            {selected ? (
+              <form className="stacked-form" onSubmit={update}>
+                <div>
+                  <label>
+                    <span className="form-label">Clinical Diagnosis *</span>
+                    <textarea
+                      name="diagnosis"
+                      required
+                      maxLength={2000}
+                      rows={3}
+                      defaultValue={selected.diagnosis}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">Physician Notes</span>
+                    <textarea
+                      name="notes"
+                      maxLength={10000}
+                      rows={4}
+                      placeholder="Confidential observations and treatment notes..."
+                      defaultValue={selected.notes || ''}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">
+                      <Pill size={14} /> Prescriptions & Regimen
+                    </span>
+                    <textarea
+                      name="prescription"
+                      maxLength={5000}
+                      rows={3}
+                      placeholder="Medication names, dosage schedules, duration..."
+                      defaultValue={selected.prescription || ''}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setSelected(null)}
+                  >
+                    Cancel Edit
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className={`btn btn-primary ${saving ? 'btn-loading' : ''}`}
+                  >
+                    <Save size={16} />
+                    <span>{saving ? 'Saving...' : 'Update Record'}</span>
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form className="stacked-form" onSubmit={create}>
+                <div>
+                  <label>
+                    <span className="form-label">Completed Consultation *</span>
+                    <select name="appointment_id" required defaultValue="">
+                      <option value="" disabled>
+                        {appointments.length === 0
+                          ? 'No pending completed consultations require records'
+                          : '-- Choose completed consultation --'}
+                      </option>
+                      {appointments.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          #{item.id} · {item.patient?.full_name || 'Patient'} · {new Date(item.start_at).toLocaleDateString()}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {appointments.length === 0 && (
+                    <span className="text-xs text-muted" style={{ display: 'block', marginTop: '4px' }}>
+                      To create a record, complete a consultation under your Schedule first.
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">Clinical Diagnosis *</span>
+                    <textarea
+                      name="diagnosis"
+                      required
+                      maxLength={2000}
+                      rows={3}
+                      placeholder="Primary diagnosis, ICD-10 notes, or key clinical observations..."
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">Physician Notes</span>
+                    <textarea
+                      name="notes"
+                      maxLength={10000}
+                      rows={4}
+                      placeholder="Detailed patient history, tests ordered, or recovery recommendations..."
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">
+                      <Pill size={14} /> Prescriptions & Instructions
+                    </span>
+                    <textarea
+                      name="prescription"
+                      maxLength={5000}
+                      rows={3}
+                      placeholder="E.g. Amoxicillin 500mg - 1 capsule every 8h for 7 days..."
+                    />
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                  <button
+                    type="submit"
+                    disabled={saving || !appointments.length}
+                    className={`btn btn-primary ${saving ? 'btn-loading' : ''}`}
+                  >
+                    <Save size={16} />
+                    <span>{saving ? 'Creating...' : 'Create Medical Record'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+
+        {/* Right List: Existing Records */}
+        <div className="card">
+          <div className="card-header">
+            <h3>Authored Clinical Records</h3>
+          </div>
+
+          <div style={{ padding: '16px 24px 0' }}>
+            <div className="search-input-wrap">
+              <Search size={16} />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search authored records..."
+              />
+            </div>
+          </div>
+
+          <div className="card-body">
+            {loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="skeleton skeleton-row" />
+                <div className="skeleton skeleton-row" />
+              </div>
+            ) : !filteredRecords || filteredRecords.length === 0 ? (
+              <div className="empty-state" style={{ padding: '36px 16px' }}>
+                <div className="empty-state-icon">
+                  <ClipboardList />
+                </div>
+                <h3>No records found</h3>
+                <p>
+                  {searchQuery
+                    ? 'No records match your search filter.'
+                    : 'You have not yet authored medical records for completed appointments.'}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filteredRecords.map((r) => (
+                  <div
+                    key={r.id}
+                    style={{
+                      padding: '16px',
+                      background: selected?.id === r.id ? 'var(--color-primary-light)' : 'var(--color-bg)',
+                      border: selected?.id === r.id ? '1px solid var(--color-primary)' : '1px solid var(--color-border-light)',
+                      borderRadius: 'var(--radius-md)',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            background: 'var(--color-primary)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          {r.patient.full_name.charAt(0)}
+                        </div>
+                        <strong style={{ fontSize: '0.9rem' }}>{r.patient.full_name}</strong>
+                      </div>
+                      <span className="text-xs text-muted">Record #{r.id}</span>
+                    </div>
+
+                    <p
+                      style={{
+                        margin: '6px 0',
+                        fontSize: '0.8125rem',
+                        color: 'var(--color-text)',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {r.diagnosis}
+                    </p>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => void open(r.id)}
+                      >
+                        <Edit3 size={14} />
+                        <span>Edit Details</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

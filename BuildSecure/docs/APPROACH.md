@@ -64,6 +64,7 @@ The browser sends credentialed requests to the Flask REST API, which checks the 
 | **Phase 5: Appointment Management** | 22h - 24h | Patient booking/history/cancellation, doctor schedule and transitions, admin search/status | Ownership, IDOR, state machine, overlap, input, and pagination tests | `Complete` |
 | **Phase 6: Medical Records** | 24h+ | Doctor-authored records linked to completed appointments with patient and doctor views | Record ownership, assignment, field allowlist, and clinical-data logging tests | `Complete` |
 | **Phase 7: Security Hardening** | 24h+ | Defensive assessment, Docker hardening, CSRF origin checks, shared rate-limit requirement, and audit report | Focused security tests 3/3; frontend lint/type/build and Compose validation pass; full backend suite awaits local Redis client install (142/143 passed) | `Implemented; full local suite pending` |
+| **Phase 8: Premium Frontend UI/UX Redesign** | 24h+ | Comprehensive design system overhaul, Lucide icons, responsive sidebar AppShell, toast notification provider, split-screen auth layouts, live stats, and complete redesign of 20+ routes across Patient, Doctor, and Admin portals | Static Next.js production build (20/20 routes compiled, zero errors) | `Complete` |
 
 ---
 
@@ -92,6 +93,12 @@ The browser sends credentialed requests to the Flask REST API, which checks the 
 - **Context:** The local Compose stack previously exposed MySQL on the host and allowed production rate limiting to default to per-process memory.
 - **Decision & Rationale:** Compose now requires environment-provided database credentials, leaves MySQL on the internal service network, and requires a shared persistent limiter backend in production. Local development retains explicit localhost frontend and backend ports.
 - **Security & Performance Trade-offs:** Developers must copy and populate the root environment template, and production deployment must provision Redis or another supported shared limiter store. These requirements prevent accidental public database access and distributed rate-limit bypass.
+
+### ADR-004: Premium Healthcare Design System & Component Architecture
+- **Status:** Accepted
+- **Context:** The existing frontend screens used basic, unstyled HTML tables and forms lacking visual cohesion, role-appropriate information hierarchy, and responsive navigation for modern clinical operations.
+- **Decision & Rationale:** Phase 8 engineered an accessible, tokenized healthcare design system using vanilla CSS with CSS Custom Properties, Inter typography, Lucide SVG icons, a global auto-dismissing Toast notification provider, an authenticated responsive AppShell with role-aware sidebar navigation, and polished split-screen authentication experiences.
+- **Security & Performance Trade-offs:** Retained pure client-side zero-dependency styling with zero heavy CSS utility runtimes, preserving fast compilation times and full compatibility with strict Content Security Policies (CSP). All authenticated requests remain governed by HttpOnly cookies and role-enforced backend route guards.
 
 ---
 
