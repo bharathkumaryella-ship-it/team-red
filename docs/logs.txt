@@ -832,7 +832,7 @@ Agent Response Summary:
 Confirmed the repeated output still indicates an unavailable Docker CLI. Asked whether Docker Desktop is installed to choose between installation and a PATH/engine diagnosis; made no code changes.
 
 Commit SHA:
-Pending
+7e21779
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
