@@ -65,6 +65,7 @@ def create_app(
             from flask import g
 
             g.user_id = session.get("user_id")
+            g.session_token_version = session.get("token_version")
 
     @app.before_request
     def enforce_trusted_mutation_origin():

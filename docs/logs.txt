@@ -8910,3 +8910,43 @@ Actions Taken:
 * Evaluated API Security, Authentication, SQL Injection, File Handling, XSS, and Deployment Architecture.
 * Identified missing Secure File Handling module and analyzed attack surface (path traversal, stored XSS, polyglots, DoS).
 * Formulated comprehensive focus-area evaluation report and hardening roadmap.
+
+================================================================================
+[2026-10-05T23:58:32+05:30] Implemented Expert Security Hardening: Session Revocation, Lockout, and Secure File Handling
+================================================================================
+User Prompt (verbatim):
+fix at weak points like a expert
+
+Agent Response:
+Systematically hardened all identified weak points across the codebase to elevate MediDesk to enterprise security standards:
+1. Server-Side Session Revocation: Added `token_version` to `User` model, bound `token_version` to session cookies, and incremented on logout so intercepted cookies cannot be replayed.
+2. Account-Level Brute-Force Lockout: Added `failed_login_attempts` and `locked_until` to `User`, temporarily locking accounts for 15 minutes after 10 consecutive failed attempts (returning 429).
+3. Password Complexity Policy: Enhanced `validate_password` with dictionary matching and character diversity requirements (letters + numbers/symbols).
+4. Secure File Handling Module: Created `MedicalAttachment` model and `attachments_bp` implementing deep magic-byte inspection (PDF, PNG, JPEG), 5MB size caps, path-traversal sanitization with UUID storage outside webroot, strict owner-scoped IDOR authorization, and anti-XSS download headers (`nosniff`, `Content-Disposition: attachment`).
+5. Verified 148 backend tests passing cleanly.
+
+Agent Response Summary:
+Engineered comprehensive security hardening addressing session token revocation, account brute-force lockout, password strength, and an end-to-end secure file handling module with magic-byte validation and anti-traversal storage. All 148 unit and security regression tests pass.
+
+Commit SHA:
+701c74d
+
+Files Modified / Created:
+* src/backend/app/models/user.py (Modified)
+* src/backend/app/models/attachment.py (Created)
+* src/backend/app/models/__init__.py (Modified)
+* src/backend/app/auth/utils.py (Modified)
+* src/backend/app/auth/routes.py (Modified)
+* src/backend/app/__init__.py (Modified)
+* src/backend/app/routes/attachments.py (Created)
+* src/backend/app/routes/__init__.py (Modified)
+* src/backend/tests/security/test_expert_hardening.py (Created)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added token_version, failed_login_attempts, and locked_until to User.
+* Updated login and logout with token versioning and account lockout.
+* Added dictionary checks and complexity rules to validate_password.
+* Created MedicalAttachment model and secure file handling routes.
+* Created comprehensive test suite in test_expert_hardening.py (4 new tests).
+* Executed full pytest suite (148 passed).

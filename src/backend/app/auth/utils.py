@@ -36,6 +36,17 @@ def validate_email(email: str) -> bool:
     return len(email) <= 255 and bool(re.match(pattern, email))
 
 
+COMMON_WEAK_PASSWORDS = {
+    "password",
+    "password123",
+    "12345678",
+    "admin123",
+    "qwerty123",
+    "letmein123",
+    "welcome123",
+}
+
+
 def validate_password(password: str) -> tuple[bool, str]:
     """Validate password strength.
     
@@ -51,6 +62,12 @@ def validate_password(password: str) -> tuple[bool, str]:
         return False, "Password must be at least 8 characters long"
     if len(password) > 128:
         return False, "Password must not exceed 128 characters"
+    if password.lower() in COMMON_WEAK_PASSWORDS:
+        return False, "Password is too common and easily guessable"
+    has_letter = any(c.isalpha() for c in password)
+    has_digit_or_symbol = any(not c.isalpha() for c in password)
+    if not (has_letter and has_digit_or_symbol):
+        return False, "Password must contain letters and at least one number or special character"
     return True, ""
 
 
@@ -116,7 +133,15 @@ def get_current_user():
             .where(User.id == int(user_id))
             .execution_options(populate_existing=True)
         ).scalar_one_or_none()
-        return user if user and user.is_active else None
+        if not user or not user.is_active:
+            return None
+        # Invalidate sessions whose token_version does not match current user version
+        session_token_version = getattr(g, "session_token_version", None)
+        if session_token_version is not None and user.token_version != session_token_version:
+            from flask import session as flask_session
+            flask_session.clear()
+            return None
+        return user
     except (ValueError, TypeError):
         return None
 

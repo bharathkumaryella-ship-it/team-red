@@ -1,6 +1,7 @@
 """Authentication blueprint with register, login, logout, and me endpoints."""
 
 import logging
+from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, request, jsonify, session
 from sqlalchemy.exc import IntegrityError
@@ -167,8 +168,21 @@ def login():
         # Find user by email
         user = User.query.filter_by(email=email).first()
 
+        # Check if account is temporarily locked due to failed attempts
+        if user and user.locked_until and user.locked_until > datetime.utcnow():
+            auth_logger.warning("Login rejected for locked account (user_id=%s)", user.id)
+            return jsonify({
+                "error": "Account is temporarily locked due to multiple failed login attempts. Please try again later."
+            }), 429
+
         # Verify password and account status
         if not user or not user.verify_password(password):
+            if user:
+                user.failed_login_attempts += 1
+                if user.failed_login_attempts >= 10:
+                    user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+                    auth_logger.warning("Account locked after 10 failed attempts (user_id=%s)", user.id)
+                db.session.commit()
             auth_logger.warning("Failed login attempt")
             return jsonify({"error": "Invalid email or password"}), 401
 
@@ -176,9 +190,15 @@ def login():
             auth_logger.warning("Login attempt for inactive account (user_id=%s)", user.id)
             return jsonify({"error": "Invalid email or password"}), 401
 
-        # Establish session
+        # Reset failed attempts and lockout on successful login
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        db.session.commit()
+
+        # Establish session with bound token version
         session.clear()
         session["user_id"] = user.id
+        session["token_version"] = user.token_version
         session.permanent = True
 
         auth_logger.info("Successful login (user_id=%s)", user.id)
@@ -192,15 +212,18 @@ def login():
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
-    """Clear authenticated session.
+    """Clear authenticated session and invalidate server-side token.
     
     Response:
         200: Logout successful (even if not authenticated)
     """
     try:
-        user_id = session.get("user_id")
-        if user_id is not None:
-            auth_logger.info("Logout (user_id=%s)", user_id)
+        user = get_current_user()
+        if user:
+            # Increment token_version to invalidate any copied/intercepted session cookies
+            user.token_version += 1
+            db.session.commit()
+            auth_logger.info("Session revoked and logged out (user_id=%s)", user.id)
         session.clear()
         return jsonify({"message": "Logged out"}), 200
     except Exception as e:

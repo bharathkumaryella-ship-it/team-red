@@ -32,6 +32,9 @@ class User(db.Model):
     phone = db.Column(db.String(20), nullable=True)
     role = db.Column(db.Enum(UserRole), nullable=False, index=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    token_version = db.Column(db.Integer, nullable=False, default=1)
+    failed_login_attempts = db.Column(db.Integer, nullable=False, default=0)
+    locked_until = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -76,6 +79,9 @@ class User(db.Model):
         phone: str | None = None,
         role: UserRole = UserRole.PATIENT,
         is_active: bool = True,
+        token_version: int = 1,
+        failed_login_attempts: int = 0,
+        locked_until: datetime | None = None,
         **kwargs,
     ):
         self.email = email
@@ -84,6 +90,9 @@ class User(db.Model):
         self.phone = phone
         self.role = role
         self.is_active = is_active
+        self.token_version = token_version
+        self.failed_login_attempts = failed_login_attempts
+        self.locked_until = locked_until
         for k, v in kwargs.items():
             setattr(self, k, v)
 
