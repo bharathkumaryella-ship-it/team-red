@@ -610,3 +610,27 @@ Files Modified / Created:
 
 Actions Taken:
 * Recorded the commit containing the MediDesk Phase 1 implementation and final response.
+================================================================================
+[2026-10-05T14:52:36+05:30] Separating backend development dependencies
+================================================================================
+User Prompt (verbatim):
+This is a follow-up to the MediDesk Phase 1 request recorded earlier in this log; no new user prompt was received.
+
+Agent Response:
+Moved pytest out of the production requirements so the Docker image installs only runtime packages. Added requirements-dev.txt to include pytest for local testing and updated the backend README commands. All 6 backend tests still pass, Python compilation succeeds, and workspace diagnostics report no errors.
+
+Agent Response Summary:
+Separated production and test dependencies to avoid packaging pytest in the production container, consistent with the request to avoid unnecessary dependencies. Re-ran the focused backend validation successfully.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+* src/backend/README.md (Modified)
+* src/backend/requirements.txt (Modified)
+* src/backend/requirements-dev.txt (Created)
+
+Actions Taken:
+* Updated the runtime and development requirements manifests and README install commands.
+* Ran pytest (6 passed), compileall, workspace diagnostics, and git diff --check.

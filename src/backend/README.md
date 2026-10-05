@@ -29,7 +29,7 @@ Use a generated value for each secret variable. The local MySQL account should h
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 python run.py
 ```
 
@@ -58,7 +58,7 @@ For a MySQL instance running on the host and accessed from Docker Desktop, set `
 From this backend directory, run tests using in-memory SQLite; MySQL is not required:
 
 ```powershell
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
 
