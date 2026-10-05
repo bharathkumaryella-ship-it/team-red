@@ -10120,7 +10120,7 @@ Agent Response Summary:
 Restored complete visual design system by ensuring `layout.css` is served with HTTP 200 (33.5 KB) and enabling Google Fonts in CSP. The UI now renders with full modern styling, buttons, colors, cards, and Inter typography.
 
 Commit SHA:
-Pending
+fdd1029
 
 Files Modified / Created:
 * src/frontend/app/layout.tsx (Modified)
