@@ -8772,7 +8772,7 @@ Agent Response Summary:
 Configured pyrightconfig.json and expanded VS Code settings to ensure complete editor import resolution across all open model files. Requested exact details if the error is occurring in another environment.
 
 Commit SHA:
-Pending
+b891064
 
 Files Modified / Created:
 * pyrightconfig.json (Created)
