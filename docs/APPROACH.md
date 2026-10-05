@@ -61,7 +61,7 @@ The browser sends credentialed requests to the Flask REST API, which checks the 
 | **Phase 2: Core Domain & Models** | 4h – 12h | Database models, migrations, relationships, seed data, comprehensive tests | Model test suite (20/20 passing) | `Complete` |
 | **Phase 3: Authentication & RBAC** | 12h - 18h | Sessions, registration/login, role helpers, rate limits | Auth and privilege tests | `Complete` |
 | **Phase 4: Patient & Doctor Management** | 18h - 22h | Self-service profiles, directory, admin account management | Ownership, role, mass-assignment, search, pagination tests | `Complete` |
-| **Phase 5: Deployment & Freeze** | 22h - 24h | Deployment verification and submission commit freeze | Live deployment check | `Planned` |
+| **Phase 5: Appointment Management** | 22h - 24h | Patient booking/history/cancellation, doctor schedule and transitions, admin search/status | Ownership, IDOR, state machine, overlap, input, and pagination tests | `In progress` |
 
 ---
 
@@ -189,7 +189,7 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 - **Date Handling:** Python `date` objects used for birth dates; datetime objects for appointment timestamps and audit trails
 - **Enum Types:** Role and Status fields use Python Enums mapped to database ENUM columns for type safety
 
-### 7.7 Next Phase Roadmap
+### 7.7 Phase 2 Roadmap Snapshot (Superseded by Phases 3–5 Below)
 - Implement role-based authorization middleware in Flask routes
 - Create REST API endpoints for /patients, /doctors, /appointments (GET, POST, PUT, DELETE)
 - Add request validation schemas (marshmallow or Pydantic)
@@ -233,3 +233,25 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 ### 9.3 Verification Status
 - Backend suite: 95 tests passed, including Phase 4 role, ownership, field allowlist, status, search, and pagination cases.
 - Frontend TypeScript, lint, and optimized production build passed. Docker/MySQL and live browser checks were unavailable in this environment; deployment behavior remains unverified.
+
+## 10. Phase 5: Appointment Management
+
+### 10.1 Workflow and Authorization
+- Patients choose an active doctor from the existing patient-only directory, request a time range with a reason, and receive a server-created `PENDING` appointment. Patient ID and status are never accepted from the request.
+- Patient list/detail/cancel queries are filtered by the authenticated patient ID. Doctor list/detail/actions are filtered by the authenticated doctor ID. Admin endpoints require the ADMIN role and use bounded search/pagination.
+- A doctor sees the associated patient's ID and name only through an appointment assigned to that doctor. The admin appointment serializer omits reason and internal notes.
+
+### 10.2 State and Cancellation Rules
+- Allowed transitions: `PENDING → CONFIRMED`, `PENDING → CANCELLED`, `CONFIRMED → COMPLETED`, `CONFIRMED → CANCELLED`. `COMPLETED` and `CANCELLED` are terminal.
+- Confirm and cancel actions require a start time in the future. Completion requires the end time to have passed. Patients and doctors may cancel pending/confirmed visits before start; the system has no additional cancellation cutoff.
+- Cancelled appointments do not block a new booking. Pending, confirmed, and completed appointments are considered for overlap (a completed appointment cannot be in the future through normal workflow).
+
+### 10.3 Double Booking, Transaction, and Timezone
+- The overlap predicate is `existing.start_at < new.end_at AND existing.end_at > new.start_at`, so adjacent ranges are allowed and partial/full intersections are rejected.
+- Creation locks the active doctor's `users` row with SQLAlchemy `with_for_update()`, performs a locking/current read of overlapping appointments, then inserts and commits under the same transaction. The current read matters because the authentication lookup may establish a REPEATABLE READ snapshot before a request waits on the doctor lock. In MySQL/InnoDB this serializes competing booking transactions for the same doctor; different doctors can proceed independently. The SQLite test database does not implement equivalent row locks, and this mitigation has not been verified with simultaneous MySQL requests.
+- Request timestamps must be ISO 8601 with an explicit offset. They are normalized to UTC, stored as naive values in existing `DATETIME` columns, and emitted as UTC ISO timestamps with `Z`. The browser formats them in local time. MySQL server/session timezone does not reinterpret the application's UTC-naive values.
+
+### 10.4 Milestone Verification
+- `IMPLEMENTED`: Flask patient, doctor, and admin APIs; patient booking/list/detail/cancel screens; doctor schedule and actions; admin appointment filters and status management.
+- `TESTED`: automated backend cases exercise roles, ownership, validation, overlap, transitions, and filters. Record exact test output in `docs/logs.txt`.
+- `PLANNED / NOT VERIFIED HERE`: concurrent requests against MySQL/InnoDB, Docker end-to-end patient-to-doctor workflow, and real browser session testing.

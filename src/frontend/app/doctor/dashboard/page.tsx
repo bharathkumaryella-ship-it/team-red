@@ -9,7 +9,8 @@ export default async function DoctorDashboard() {
         <div className="grid two-up">
           <article className="info-card">
             <h2>Schedule</h2>
-            <p>Doctor appointment actions and workflow controls will be implemented later.</p>
+            <p>Review your assigned appointments and manage their status.</p>
+            <Link href="/doctor/appointments">Manage appointments</Link>
           </article>
           <article className="info-card">
             <h2>Records</h2>

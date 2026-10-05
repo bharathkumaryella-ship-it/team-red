@@ -16,7 +16,7 @@ The Flask API is the security boundary. Frontend route guards improve navigation
 
 ## Authorization — IMPLEMENTED FOUNDATION
 
-Reusable `require_authentication`, `require_role`, `is_resource_owner`, and `is_authorized_doctor` helpers enforce identity/role or explicit `patient_id`/`doctor_id` ownership. No appointment, doctor-patient, medical-record, or admin CRUD endpoints are included in this phase. Helpers must be applied in future backend routes; frontend route checks are not access control.
+Reusable `require_authentication`, `require_role`, `is_resource_owner`, and `is_authorized_doctor` helpers enforce identity/role or explicit `patient_id`/`doctor_id` ownership. Appointment APIs apply role-specific ownership filters in Flask; frontend route checks are not access control.
 
 ## Frontend — IMPLEMENTED
 
@@ -41,8 +41,22 @@ The backend test suite covers registration, hash handling, login failures/status
 - Admin-only `/api/admin/patients` and `/api/admin/doctors` support bounded pagination, search, and detail views. Admins can create/update doctor accounts and activate/deactivate patient or doctor accounts. Account deactivation preserves historical references; destructive deletion is not implemented.
 - Admin doctor creation always assigns `DOCTOR`, hashes the initial password, and creates one `User` plus one `DoctorProfile`. Unexpected fields such as `role` are rejected. Duplicate email or license conflicts return a safe 409.
 - Search uses SQLAlchemy ORM filters with bounded text; `limit` is capped at 100. Mutations with an untrusted Origin are rejected.
-- Patient/doctor account access is enforced in Flask. UI route guards are only a navigation aid. Appointment booking, medical-record APIs/UI, and unrestricted doctor access to patient records are out of scope.
+- Patient/doctor account access is enforced in Flask. UI route guards are only a navigation aid. Appointment authorization is documented below; medical-record APIs and unrestricted doctor access to patient records remain out of scope.
 
 ## Phase 4 Verification — TESTED
 
 Backend pytest suite: 95 passed. Frontend TypeScript check, Next lint, and optimized build passed. Docker/MySQL and live browser end-to-end testing were unavailable in this environment, so those remain unverified.
+
+## Appointment Management — IMPLEMENTED
+
+- Patients create appointments with only `doctor_id`, `start_at`, `end_at`, and `reason`. Flask derives patient ID and `PENDING` status from trusted server state; it rejects unexpected fields, inactive/missing doctors or patients, malformed/naive timestamps, past start times, nonpositive or over-four-hour durations, and empty/oversized reasons.
+- `GET /api/appointments/my` is patient-scoped and paginated with status and period filters. Appointment detail is scoped by patient or doctor assignment; unauthorized and missing IDs both return 404. Patients can cancel only their own pending/confirmed future appointments.
+- Doctors use `/api/doctor/appointments` and its action routes. The authenticated doctor ID is the only schedule scope. Doctor views expose only the associated patient's ID/name. Admin-only `/api/admin/appointments` supports bounded pagination, search, status, doctor, and date filters; admin summaries omit appointment reason.
+- State transitions are limited to PENDING → CONFIRMED/CANCELLED and CONFIRMED → COMPLETED/CANCELLED. Confirm and cancel require the appointment to remain in the future; completion requires its end time to have passed. Completed and cancelled states are terminal.
+- Overlap uses `existing.start_at < requested.end_at AND existing.end_at > requested.start_at`, excluding cancelled appointments. Booking locks the doctor's user row, performs a locking/current overlap read, and inserts within the same transaction. The current read is needed because authentication may already have opened a repeatable-read snapshot before a request waits on the doctor lock. This serializes bookings by doctor on MySQL/InnoDB; SQLite ignores row locks, and no concurrent MySQL integration test was run, so this is the selected mitigation rather than a claim of proven race-free production behavior. Availability checks are advisory and booking checks again.
+- Times require ISO 8601 with an explicit UTC offset. The backend normalizes to UTC, stores UTC-naive values in the existing MySQL `DATETIME` columns, and serializes UTC with `Z`; the frontend renders in the browser's timezone. Cancellation has no arbitrary lead-time cutoff: pending/confirmed appointments can be cancelled only before their start.
+- Audit events record appointment IDs and actor/user IDs for create, transition, conflicts, and denied access. They do not log reason text or other clinical details. API responses do not expose tokens, password hashes, internal DB errors, or notes.
+
+## Appointment Verification — TESTED / ENVIRONMENT LIMITED
+
+Automated SQLite tests cover patient booking and identity derivation, invalid and mass-assigned fields, inactive doctors, time validation, overlap and adjacent slots, cancelled-slot release, patient and doctor object authorization, status transitions and timing, admin role/filter/pagination behavior, and safe response fields. The SQLite suite cannot verify MySQL row-lock concurrency. Docker/MySQL and live browser end-to-end checks are environment-level validation and must be reported separately from the passing automated tests.

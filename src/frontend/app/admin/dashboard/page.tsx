@@ -14,9 +14,10 @@ export default async function AdminDashboard() {
           </article>
           <article className="info-card">
             <h2>Team oversight</h2>
-            <p>Manage doctor profiles and account status. Appointment workflows remain out of scope.</p>
+            <p>Manage doctor profiles and account status.</p>
             <Link href="/admin/doctors">Manage doctors</Link>
           </article>
+          <article className="info-card"><h2>Appointments</h2><p>Search appointments, review their details, and apply valid status changes.</p><Link href="/admin/appointments">Manage appointments</Link></article>
         </div>
       </section>
     </div>

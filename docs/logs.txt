@@ -3621,3 +3621,1090 @@ Files Modified / Created:
 
 Actions Taken:
 * Recorded the commit SHA for the verification turn-log entry
+================================================================================
+[2026-10-05T18:26:42+05:30] SESSION START
+================================================================================
+Agent: Codex
+Repo Root: C:\Users\bhara\BuildSecure
+Branch: main
+System Time: 2026-10-05T18:26:42+05:30
+Deadline: 2026-10-06T11:00:00+05:30
+
+================================================================================
+[2026-10-05T18:26:42+05:30] Implement Phase 5 appointment management
+================================================================================
+User Prompt (verbatim):
+# Files pasted by the user:
+
+## "You are continuing development of the MediDesk Secure Clinic & Appointment Mana…": C:\Users\bhara/.codex/attachments/e2f64600-e3cd-44e1-921f-6a11b225a730/Pasted text.txt
+
+## My request:
+
+
+Attached request (verbatim):You are continuing development of the MediDesk Secure Clinic & Appointment Management System.
+
+IMPORTANT:
+Phase 1 — Foundation
+Phase 2 — Database Models
+Phase 3 — Authentication + RBAC
+Phase 4 — Patient & Doctor Management
+
+have already been completed.
+
+Do NOT reset the project.
+Do NOT remove working functionality.
+Do NOT recreate the database from scratch.
+Do NOT replace the established architecture.
+
+I am the sole developer responsible for the complete project:
+
+- Next.js frontend
+- Flask backend
+- MySQL database
+- Security
+- Docker
+- Git/GitHub
+- Deployment
+- Testing
+
+This is PHASE 5 ONLY.
+
+==================================================
+PHASE 5 OBJECTIVE
+==================================================
+
+Implement the complete Appointment Management functionality.
+
+The appointment system must support:
+
+PATIENT:
+- View available doctors
+- Create an appointment
+- View own appointments
+- View appointment details
+- Cancel eligible own appointments
+- View appointment history
+
+DOCTOR:
+- View own appointments
+- View appointment details
+- Confirm appointment
+- Complete appointment
+- Cancel appointment where business rules permit
+- Access the patient associated with an authorized appointment
+
+ADMIN:
+- View appointments
+- Search/filter appointments
+- Manage appointment status where appropriate
+
+Most importantly:
+
+THE BACKEND MUST ENFORCE APPOINTMENT OWNERSHIP, AUTHORIZATION, AND BUSINESS LOGIC.
+
+Do not rely on frontend restrictions.
+
+==================================================
+1. APPOINTMENT WORKFLOW
+==================================================
+
+The intended workflow is:
+
+PATIENT
+   ↓
+Select Doctor
+   ↓
+Select Date/Time
+   ↓
+Enter Appointment Reason
+   ↓
+Backend Validation
+   ↓
+Availability Check
+   ↓
+Authorization Check
+   ↓
+Create Appointment
+   ↓
+PENDING
+   ↓
+DOCTOR CONFIRMS
+   ↓
+CONFIRMED
+   ↓
+Appointment occurs
+   ↓
+COMPLETED
+
+Cancellation may occur according to business rules.
+
+==================================================
+2. APPOINTMENT STATES
+==================================================
+
+Use the existing statuses:
+
+PENDING
+CONFIRMED
+COMPLETED
+CANCELLED
+
+Do not allow arbitrary status values.
+
+Implement valid state transitions.
+
+For example:
+
+PENDING
+ ├── CONFIRMED
+ └── CANCELLED
+
+CONFIRMED
+ ├── COMPLETED
+ └── CANCELLED
+
+COMPLETED
+ └── no further modification
+
+CANCELLED
+ └── no normal modification
+
+Do not allow:
+
+COMPLETED → PENDING
+
+CANCELLED → CONFIRMED
+
+or other invalid transitions.
+
+The backend must enforce these rules.
+
+==================================================
+3. PATIENT CREATE APPOINTMENT API
+==================================================
+
+Create an authenticated endpoint such as:
+
+POST /api/appointments
+
+The request should contain only information the patient is allowed to provide.
+
+Example:
+
+{
+  "doctor_id": 5,
+  "start_at": "2026-10-06T10:00:00",
+  "end_at": "2026-10-06T10:30:00",
+  "reason": "General consultation"
+}
+
+CRITICAL:
+
+The patient_id MUST NOT be accepted from the client as a trusted value.
+
+The backend must derive the patient identity from the authenticated user.
+
+Never trust:
+
+{
+  "patient_id": 999
+}
+
+from the frontend.
+
+==================================================
+4. APPOINTMENT VALIDATION
+==================================================
+
+Validate:
+
+- doctor_id
+- start_at
+- end_at
+- reason
+- appointment duration
+- appointment status
+
+Rules:
+
+- Doctor must exist.
+- Doctor must be active.
+- Patient must be active.
+- start_at must be valid.
+- end_at must be after start_at.
+- Appointment cannot be created in the past.
+- Appointment duration must be reasonable.
+- Reason must have a maximum length.
+- Empty or malformed values must be rejected.
+
+Do not rely only on frontend validation.
+
+==================================================
+5. DOUBLE BOOKING PREVENTION
+==================================================
+
+This is a critical business-logic requirement.
+
+A doctor must not have overlapping appointments.
+
+Example:
+
+Doctor has:
+
+10:00 - 10:30
+
+A new request:
+
+10:15 - 10:45
+
+must be rejected.
+
+The backend must perform an overlap check.
+
+Conceptually:
+
+Existing:
+[start1, end1]
+
+New:
+[start2, end2]
+
+Reject if the time ranges overlap.
+
+Do not rely only on the frontend calendar.
+
+==================================================
+6. RACE CONDITION PROTECTION
+==================================================
+
+Think about two patients booking the same slot simultaneously.
+
+The system must minimize the possibility of:
+
+Request A → availability check → available
+
+Request B → availability check → available
+
+Request A → insert
+
+Request B → insert
+
+Both appointments should NOT be accepted for the same doctor/time slot.
+
+Use an appropriate database transaction/locking/constraint strategy where practical.
+
+Document the chosen approach.
+
+Do not claim perfect concurrency protection unless it is actually implemented and tested.
+
+==================================================
+7. PATIENT APPOINTMENT LIST
+==================================================
+
+Create:
+
+GET /api/appointments/my
+
+or equivalent.
+
+A patient must only receive their own appointments.
+
+Do not allow:
+
+GET /api/appointments/my?patient_id=999
+
+to change the identity being queried.
+
+The backend derives the patient from authentication.
+
+Support pagination.
+
+Return:
+
+- appointment ID
+- doctor
+- specialization
+- start time
+- end time
+- status
+- reason
+- created time
+
+Do not expose unnecessary internal fields.
+
+==================================================
+8. PATIENT APPOINTMENT DETAIL
+==================================================
+
+Create:
+
+GET /api/appointments/<appointment_id>
+
+The endpoint must verify:
+
+Authenticated user
++
+Role
++
+Object ownership/authorization
+
+A patient can access the appointment only if it belongs to them.
+
+If Patient A requests Patient B's appointment:
+
+DENY ACCESS.
+
+Do not leak whether private resources exist unnecessarily.
+
+==================================================
+9. PATIENT CANCELLATION
+==================================================
+
+Create an endpoint such as:
+
+POST /api/appointments/<id>/cancel
+
+or use an appropriate REST design.
+
+A patient can cancel only their own eligible appointment.
+
+Business rules should prevent cancellation when:
+
+- Appointment is already completed.
+- Appointment is already cancelled.
+- Appointment is too close to start time, if this rule is adopted.
+
+If a cancellation window is implemented, make it configurable.
+
+Do not hardcode arbitrary rules without documenting them.
+
+==================================================
+10. DOCTOR APPOINTMENT LIST
+==================================================
+
+Create:
+
+GET /api/doctor/appointments
+
+The authenticated doctor must receive only appointments assigned to that doctor.
+
+Do NOT trust:
+
+doctor_id
+
+from query parameters to determine whose appointments are returned.
+
+The doctor identity must come from authentication.
+
+==================================================
+11. DOCTOR APPOINTMENT DETAIL
+==================================================
+
+Create:
+
+GET /api/doctor/appointments/<appointment_id>
+
+The doctor must only access appointments assigned to that doctor.
+
+If Doctor A attempts to access Doctor B's appointment:
+
+DENY ACCESS.
+
+This must be enforced at the backend.
+
+==================================================
+12. DOCTOR STATUS MANAGEMENT
+==================================================
+
+Create secure endpoints for:
+
+Confirm appointment
+Complete appointment
+Cancel appointment where permitted
+
+Example:
+
+POST /api/doctor/appointments/<id>/confirm
+
+POST /api/doctor/appointments/<id>/complete
+
+POST /api/doctor/appointments/<id>/cancel
+
+The backend must verify:
+
+- User is authenticated.
+- User has DOCTOR role.
+- Appointment belongs to that doctor.
+- Current appointment state permits the requested transition.
+
+==================================================
+13. ADMIN APPOINTMENT MANAGEMENT
+==================================================
+
+Create admin-only endpoints such as:
+
+GET /api/admin/appointments
+
+GET /api/admin/appointments/<id>
+
+Support:
+
+- Pagination
+- Search
+- Status filtering
+- Doctor filtering
+- Date filtering
+
+Do not expose unlimited appointment records.
+
+Do not expose unnecessary patient information.
+
+Admin access must always require backend authorization.
+
+==================================================
+14. APPOINTMENT SEARCH
+==================================================
+
+Implement safe filters such as:
+
+status
+doctor_id
+date
+date range
+
+Validate every parameter.
+
+Never construct raw SQL using string concatenation.
+
+Use SQLAlchemy safely.
+
+==================================================
+15. IDOR/BOLA PROTECTION
+==================================================
+
+This is one of the most important security requirements.
+
+Test:
+
+Patient A:
+appointment_id = 101
+
+Patient B:
+appointment_id = 102
+
+Patient A attempts:
+
+GET /api/appointments/102
+
+Expected:
+
+Access denied.
+
+Similarly:
+
+Doctor A attempts to access Doctor B's appointment.
+
+Expected:
+
+Access denied.
+
+Changing an ID must never change authorization.
+
+==================================================
+16. MASS ASSIGNMENT PROTECTION
+==================================================
+
+Never blindly accept appointment fields from request JSON.
+
+Do NOT allow the client to modify:
+
+patient_id
+doctor_id after creation unless explicitly authorized
+status through arbitrary update
+created_at
+updated_at
+internal fields
+
+For patient creation, only accept:
+
+doctor_id
+start_at
+end_at
+reason
+
+The backend controls:
+
+patient_id
+status
+timestamps
+
+==================================================
+17. STATUS TAMPERING
+==================================================
+
+A patient must NOT be able to send:
+
+{
+  "status": "COMPLETED"
+}
+
+and mark their own appointment completed.
+
+Likewise, a doctor must not be able to manipulate arbitrary appointment IDs.
+
+Status changes must happen through authorized backend operations.
+
+==================================================
+18. TIMEZONE HANDLING
+==================================================
+
+Use a consistent timezone strategy.
+
+Do not mix naive and timezone-aware timestamps carelessly.
+
+Document:
+
+- Database timezone behavior
+- API timestamp format
+- Frontend display timezone
+
+Prefer ISO 8601 timestamps.
+
+The implementation must avoid ambiguous appointment times.
+
+==================================================
+19. FRONTEND PATIENT APPOINTMENTS
+==================================================
+
+Create:
+
+/patient/appointments
+
+Features:
+
+- View appointments
+- Filter by status
+- View details
+- Cancel eligible appointment
+- Create appointment
+
+Create:
+
+/patient/book-appointment
+
+Workflow:
+
+1. Select doctor
+2. Select date
+3. Select available time
+4. Enter reason
+5. Review
+6. Submit
+7. Display result
+
+The frontend should provide useful validation.
+
+BUT:
+
+Frontend validation is not the security boundary.
+
+Backend validation must always run.
+
+==================================================
+20. FRONTEND DOCTOR APPOINTMENTS
+==================================================
+
+Create:
+
+/doctor/appointments
+
+Features:
+
+- View upcoming appointments
+- View past appointments
+- Filter status
+- Open appointment details
+- Confirm
+- Complete
+- Cancel when permitted
+
+Do not expose unauthorized patient information.
+
+==================================================
+21. FRONTEND ADMIN APPOINTMENTS
+==================================================
+
+Create:
+
+/admin/appointments
+
+Provide:
+
+- Pagination
+- Search
+- Status filter
+- Doctor filter
+- Date filter
+- Appointment detail view
+
+Keep the interface practical and hackathon-friendly.
+
+Do not over-engineer.
+
+==================================================
+22. API RESPONSE SECURITY
+==================================================
+
+Do not return:
+
+- Password hashes
+- Authentication tokens
+- Internal database details
+- Sensitive configuration
+- Unnecessary patient information
+- Internal exception messages
+
+Use safe response schemas.
+
+==================================================
+23. BUSINESS LOGIC TESTING
+==================================================
+
+Create automated tests for:
+
+1. Patient can create appointment.
+2. Unauthenticated user cannot create appointment.
+3. Patient cannot create appointment for another patient.
+4. Invalid doctor rejected.
+5. Inactive doctor rejected.
+6. Past appointment rejected.
+7. Invalid time range rejected.
+8. Double booking rejected.
+9. Overlapping appointments rejected.
+10. Patient sees only own appointments.
+11. Patient cannot access another patient's appointment.
+12. Patient can cancel eligible appointment.
+13. Patient cannot cancel completed appointment.
+14. Patient cannot mark appointment completed.
+15. Doctor sees only own appointments.
+16. Doctor cannot access another doctor's appointment.
+17. Doctor can confirm valid pending appointment.
+18. Invalid state transitions rejected.
+19. Completed appointment cannot be modified.
+20. Cancelled appointment cannot be normally modified.
+21. Admin can view appointments.
+22. Non-admin cannot access admin appointment APIs.
+23. Pagination limits work.
+24. Search filters work.
+25. SQL injection attempts do not break queries.
+
+==================================================
+24. SECURITY TESTING
+==================================================
+
+Test malicious/invalid inputs such as:
+
+doctor_id = -1
+
+appointment_id = -1
+
+very large IDs
+
+invalid timestamps
+
+unexpected JSON fields
+
+status = "COMPLETED"
+
+patient_id = another user's ID
+
+doctor_id = another doctor's ID
+
+SQL injection strings
+
+XSS payloads in reason/notes
+
+Do not perform destructive attacks.
+
+These are defensive tests against our own application.
+
+==================================================
+25. TRANSACTION SAFETY
+==================================================
+
+Use database transactions appropriately.
+
+If appointment creation fails halfway:
+
+- Do not leave partial records.
+- Roll back the transaction.
+
+If a status transition fails:
+
+- Do not leave inconsistent state.
+
+Handle database exceptions safely.
+
+Do not expose raw database exceptions to users.
+
+==================================================
+26. AUDIT LOGGING
+==================================================
+
+Log important security/business events:
+
+- Appointment created
+- Appointment cancelled
+- Appointment confirmed
+- Appointment completed
+- Unauthorized appointment access attempt
+- Invalid status transition
+- Double-booking attempt where useful
+
+Do NOT log unnecessary medical details.
+
+Do NOT log:
+
+- Passwords
+- Tokens
+- Secrets
+
+==================================================
+27. DO NOT IMPLEMENT YET
+==================================================
+
+Do NOT implement:
+
+- Medical record management
+- Prescription management
+- Notifications
+- Email/SMS
+- AI
+- Payments
+- Video consultation
+- Real healthcare integrations
+
+Those belong to later phases.
+
+==================================================
+28. PRESERVE PHASE 1–4
+==================================================
+
+Verify that all previous functionality still works:
+
+Phase 1:
+- Docker
+- Frontend
+- Backend
+- Health endpoint
+
+Phase 2:
+- Database
+- Models
+- Migrations
+
+Phase 3:
+- Registration
+- Login
+- Logout
+- /api/auth/me
+- RBAC
+- Rate limiting
+
+Phase 4:
+- Patient profile
+- Doctor profile
+- Doctor directory
+- Admin patient management
+- Admin doctor management
+
+Do not break previous functionality.
+
+==================================================
+29. DOCKER
+==================================================
+
+Verify the appointment functionality works inside Docker.
+
+Run:
+
+- MySQL
+- Flask
+- Next.js
+
+using the established Docker Compose architecture.
+
+Do not introduce unnecessary containers.
+
+==================================================
+30. DOCUMENTATION
+==================================================
+
+Update:
+
+README.md
+SECURITY.md
+
+Document:
+
+- Appointment workflow
+- Appointment state machine
+- Ownership model
+- Doctor authorization
+- Admin authorization
+- Double-booking protection
+- Concurrency considerations
+- Cancellation rules
+- Timezone strategy
+- Security testing
+
+Clearly mark:
+
+IMPLEMENTED
+TESTED
+PLANNED
+
+Do not claim controls that have not been tested.
+
+==================================================
+31. FULL VALIDATION
+==================================================
+
+Before declaring Phase 5 complete:
+
+1. Run all backend tests.
+2. Run all Phase 1–4 regression tests.
+3. Run frontend type checks.
+4. Run frontend linting if configured.
+5. Start Docker.
+6. Create a patient.
+7. Create/use a doctor.
+8. Book appointment.
+9. Verify appointment appears for patient.
+10. Verify appointment appears for correct doctor.
+11. Confirm appointment as doctor.
+12. Complete appointment.
+13. Test cancellation.
+14. Test double booking.
+15. Test IDOR/BOLA.
+16. Test role bypass.
+17. Test mass assignment.
+18. Test invalid state transitions.
+19. Test pagination.
+20. Test search.
+21. Verify logs contain no secrets.
+22. Verify no .env files or secrets are committed.
+
+Fix all genuine errors before finishing.
+
+==================================================
+32. GIT / GITHUB — MANDATORY
+==================================================
+
+THIS PHASE MUST BE COMMITTED AND PUSHED TO GITHUB.
+
+After the implementation and ALL tests pass:
+
+1. Check Git status.
+
+Run:
+
+git status
+
+2. Review the changed files.
+
+Run:
+
+git diff
+
+and, where appropriate:
+
+git diff --stat
+
+3. Ensure secrets are NOT included.
+
+Check that:
+
+.env
+
+credentials
+
+passwords
+
+tokens
+
+private keys
+
+are not staged.
+
+4. Stage only the intended Phase 5 changes.
+
+Use:
+
+git add .
+
+ONLY after verifying that sensitive/unwanted files are excluded by .gitignore.
+
+5. Create a meaningful commit.
+
+Use exactly or similarly:
+
+git commit -m "feat: implement secure appointment management"
+
+6. Verify the commit:
+
+git log -1 --oneline
+
+7. Push the current branch to GitHub.
+
+Use:
+
+git push origin <current-branch>
+
+Determine the current branch with:
+
+git branch --show-current
+
+Do NOT assume the branch is main or master.
+
+8. If the remote requires authentication, do NOT expose credentials or tokens.
+
+Use the existing authenticated GitHub configuration.
+
+9. Verify the push succeeded.
+
+Run:
+
+git status
+
+The working tree should be clean or contain only intentional uncommitted files.
+
+10. Do NOT force push.
+
+NEVER use:
+
+git push --force
+
+or:
+
+git reset --hard
+
+to solve a normal push conflict.
+
+If a push conflict occurs, STOP and report the conflict instead of destroying remote work.
+
+==================================================
+33. GIT COMMIT QUALITY
+==================================================
+
+The commit must contain ONLY Phase 5 work.
+
+Do not mix unrelated changes.
+
+The commit message should clearly identify the phase.
+
+Preferred:
+
+feat: implement secure appointment management
+
+If multiple commits are genuinely necessary, explain why.
+
+==================================================
+34. FINAL RESPONSE
+==================================================
+
+After completing Phase 5, report:
+
+1. Appointment APIs created
+2. Appointment frontend pages created
+3. Appointment workflow
+4. State transition rules
+5. Ownership rules
+6. Doctor authorization
+7. Admin authorization
+8. Double-booking protection
+9. Concurrency approach
+10. Cancellation rules
+11. Security controls
+12. Tests created
+13. Tests executed
+14. Test results
+15. Docker verification
+16. Git branch name
+17. Commit hash
+18. Commit message
+19. GitHub push result
+20. Whether working tree is clean
+21. Any unresolved issue
+
+IMPORTANT:
+
+Do not automatically continue to Phase 6.
+
+STOP after Phase 5 and wait for the next instruction.
+Agent Response:
+I will inspect the existing architecture and implement the requested Phase 5 appointment management within the established stack, then run the requested validation and publish the changes on the current branch without force-pushing.
+
+Agent Response Summary:
+Started Phase 5 by recording the attached specification and session details. Next I will map the current backend models, routes, frontend patterns, tests, and Docker setup before editing.
+
+Commit SHA:
+(pending)
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Read AGENTS.md and the attached Phase 5 specification
+* Recorded this session start and user turn================================================================================
+[2026-10-05T18:46:18+05:30] Phase 5 implementation results
+================================================================================
+Completion update for the Phase 5 request recorded earlier in this turn.
+
+Agent Response:
+Implemented the Phase 5 appointment workflow in Flask and Next.js. Patients can check a proposed slot, request and review their own appointments, view details, and cancel eligible visits. Doctors can view only their assigned appointments and patient names, then confirm, complete after the end time, or cancel before start. Admins can search, filter, page through, inspect, and apply valid status transitions. The backend derives patient identity and initial status from the authenticated session, validates timestamps and duration, applies object-level authorization, and rejects overlaps. Booking serializes by locking the doctor row and performs a locking/current overlap read in the same transaction; this mitigation is documented but not verified with concurrent MySQL requests.
+Validation: the full backend suite passed (127 tests); Next.js lint, TypeScript, and production build passed; Docker Compose configuration parsed. Docker/MySQL end-to-end verification could not run because the Docker engine pipe is unavailable and Docker Desktop is not installed. No secrets were added or staged. The current local branch is main; its remote main history is divergent, so the required normal push may be rejected. No force push will be used.
+
+Agent Response Summary:
+Added patient, doctor, and admin appointment APIs and role-specific frontend pages; added 29 appointment-focused test cases; updated README, SECURITY, and architecture documentation. Full backend and frontend checks passed. Docker runtime validation remains blocked by the missing local Docker engine.
+
+Commit SHA:
+(pending)
+
+Files Modified / Created:
+* README.md (Modified)
+* SECURITY.md (Modified)
+* docs/APPROACH.md (Modified)
+* docs/logs.txt (Modified)
+* src/backend/app/routes/__init__.py (Modified)
+* src/backend/app/routes/admin_appointments.py (Created)
+* src/backend/app/routes/appointments.py (Created)
+* src/backend/app/routes/doctor_appointments.py (Created)
+* src/backend/app/services/appointment_management.py (Created)
+* src/backend/tests/test_appointments.py (Created)
+* src/frontend/app/admin/appointments/page.tsx (Created)
+* src/frontend/app/admin/dashboard/page.tsx (Modified)
+* src/frontend/app/doctor/appointments/page.tsx (Created)
+* src/frontend/app/doctor/dashboard/page.tsx (Modified)
+* src/frontend/app/navigation.tsx (Modified)
+* src/frontend/app/patient/appointments/page.tsx (Created)
+* src/frontend/app/patient/book-appointment/page.tsx (Created)
+* src/frontend/app/patient/dashboard/page.tsx (Modified)
+* src/frontend/lib/appointments.ts (Created)
+
+Actions Taken:
+* Ran `python -m pytest` in src/backend: 127 passed, 4 pre-existing SQLAlchemy deprecation warnings
+* Ran `npm.cmd run lint`: passed without warnings
+* Ran `npx.cmd tsc --noEmit`: passed
+* Ran `npm.cmd run build`: passed
+* Ran `docker compose config --quiet`: passed
+* Attempted `docker compose up --build --detach`: failed because Docker engine named pipe was unavailable
+* Verified src/backend/.env is ignored and untracked; `git diff --check` passed
+* Reviewed current local branch/remote history and prepared a normal non-force push
+================================================================================
+[2026-10-05T18:48:00+05:30] Correct Phase 5 test-case count
+================================================================================
+Correction to the Phase 5 implementation results entry: `tests/test_appointments.py` collects 32 appointment-focused pytest cases (including parameterized cases), not 29. The complete backend suite remains 127 tests passed.
+
+Actions Taken:
+* Ran `python -m pytest --collect-only -q tests/test_appointments.py`

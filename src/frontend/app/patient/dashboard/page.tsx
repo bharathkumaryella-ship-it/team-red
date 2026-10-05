@@ -9,7 +9,8 @@ export default async function PatientDashboard() {
         <div className="grid two-up">
           <article className="info-card">
             <h2>Upcoming visits</h2>
-            <p>Appointment views and booking workflows will be implemented later.</p>
+            <p>Review your visits, check appointment details, or book time with an active doctor.</p>
+            <Link href="/patient/appointments">View appointments</Link> · <Link href="/patient/book-appointment">Book a visit</Link>
           </article>
           <article className="info-card">
             <h2>Profile</h2>
