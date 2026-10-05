@@ -8741,7 +8741,7 @@ Agent Response Summary:
 Eliminated static type checker and IDE diagnostic errors on SQLAlchemy model instantiations by adding explicit constructors and configuring VS Code extraPaths. Confirmed all 144 backend tests pass with zero warnings.
 
 Commit SHA:
-Pending
+caeefe0
 
 Files Modified / Created:
 * src/backend/app/models/user.py (Modified)
