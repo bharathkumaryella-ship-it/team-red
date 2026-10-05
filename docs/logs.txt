@@ -8015,3 +8015,47 @@ Files Modified / Created:
 Actions Taken:
 * Recorded the current request and answer in the append-only log.
 * Cross-checked the existing deployment docs and environment templates for the correct startup commands.
+
+================================================================================
+[2026-10-05T21:52:38+05:30] Troubleshoot local frontend startup
+================================================================================
+User Prompt (verbatim):
+<current_datetime>2026-10-05T21:52:38.675+05:30</current_datetime>
+
+PS C:\Users\bhara\BuildSecure> (Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned) ; (& c:\Users\bhara\BuildSecure\.venv\Scripts\Activate.ps1)
+(.venv) PS C:\Users\bhara\BuildSecure> cd src\backend
+(.venv) PS C:\Users\bhara\BuildSecure\src\backend> python -m venv .venv
+(.venv) PS C:\Users\bhara\BuildSecure\src\backend> .\.venv\Scripts\Activate.ps1
+(.venv) PS C:\Users\bhara\BuildSecure\src\backend> python -m pip install -r requirements-dev.txt
+Successfully installed backend dependencies.
+(.venv) PS C:\Users\bhara\BuildSecure\src\backend> python run.py
+ * Serving Flask app 'app'
+ * Debug mode: on
+ * Debugger is active!
+
+The browser showed ERR_CONNECTION_REFUSED for http://localhost:3000/.
+
+Agent Response:
+The backend is running correctly on port 5000. The connection-refused error is because the Next.js frontend has not been started; port 3000 is not listening. Start the frontend in a second PowerShell terminal:
+
+```powershell
+cd C:\Users\bhara\BuildSecure\src\frontend
+npm.cmd install
+npm.cmd run dev
+```
+
+Then open http://localhost:3000. Keep the backend terminal running at http://localhost:5000. If PowerShell blocks `npm`, use `npm.cmd` as shown. Verify the API at http://localhost:5000/api/health.
+
+Agent Response Summary:
+Verified that port 5000 is listening and port 3000 is not listening. Confirmed Node/npm is installed, but this PowerShell execution policy blocks `npm.ps1`; the Windows-safe `npm.cmd` commands avoid that issue. No source files were changed.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Inspected the backend entry point and frontend package configuration.
+* Checked listening ports and confirmed only the Flask backend is active.
+* Checked npm availability using npm.cmd.
