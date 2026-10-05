@@ -8618,7 +8618,7 @@ Agent Response Summary:
 Added seamless SQLite fallback and automatic schema creation for development mode to resolve registration 500 error without requiring an active MySQL/Docker service. Production remains strictly bound to MySQL with PyMySQL.
 
 Commit SHA:
-Pending
+49bb76c
 
 Files Modified / Created:
 * src/backend/app/config.py (Modified)
