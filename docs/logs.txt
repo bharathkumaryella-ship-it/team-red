@@ -8650,7 +8650,7 @@ Agent Response Summary:
 Explained the unified /login architecture that routes users to their respective dashboards based on role and clarified why public self-registration is restricted to Patients for clinical security. Provided credentials for the pre-seeded Doctor and Admin test accounts.
 
 Commit SHA:
-Pending
+658833e
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
