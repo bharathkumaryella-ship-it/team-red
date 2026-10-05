@@ -8102,3 +8102,34 @@ Actions Taken:
 * Inspected the authentication registration route and frontend registration request.
 * Checked backend database configuration and local environment values.
 * Confirmed that registration requires database infrastructure not started by `python run.py`.
+
+================================================================================
+[2026-10-05T21:58:10+05:30] Explain expected authentication session checks
+================================================================================
+User Prompt (verbatim):
+<current_datetime>2026-10-05T21:58:10.126+05:30</current_datetime>
+
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+api.ts:13  GET http://localhost:5000/api/auth/me 401 (UNAUTHORIZED)
+authRequest @ api.ts:13
+(anonymous) @ api.ts:34
+(anonymous) @ auth-provider.tsx:25
+The same request is repeated by React development-mode effects.
+
+Agent Response:
+The repeated `401 Unauthorized` responses from `/api/auth/me` are expected before login. The frontend `AuthProvider` calls this endpoint on startup to restore an existing session; when no session cookie exists, Flask correctly returns 401 and the provider sets the user to null, allowing the login/register flow. React development mode may call the effect twice, which explains the duplicate requests. No fix is required.
+
+After successful registration and login, `/api/auth/me` should return 200. If it still returns 401 after login, inspect the login response for a session cookie, keep `credentials: 'include'` enabled, and ensure the backend CORS origin is exactly `http://localhost:3000`.
+
+Agent Response Summary:
+Confirmed the backend `/api/auth/me` route intentionally returns 401 for unauthenticated requests and the frontend handles that response by treating the visitor as logged out. The duplicate calls are development-mode behavior, not evidence of a failing API. No application files were changed.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Inspected the backend `/api/auth/me` authorization behavior.
+* Inspected the frontend auth provider and request credentials configuration.
