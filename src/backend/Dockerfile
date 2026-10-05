@@ -14,9 +14,11 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 COPY --chown=app:app app ./app
 COPY --chown=app:app run.py .
+COPY --chown=app:app entrypoint.sh .
+RUN sed -i 's/\r$//' entrypoint.sh && chmod 0550 entrypoint.sh
 
 USER app
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind=0.0.0.0:5000", "--workers=2", "--error-logfile=-", "run:app"]
+CMD ["./entrypoint.sh"]

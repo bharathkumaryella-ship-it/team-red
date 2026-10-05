@@ -6576,3 +6576,44 @@ Actions Taken:
 * Checked the latest append-only session log entries.
 * Read the attached Phase 9 specification without editing it.
 * Recorded this clarification request.
+
+================================================================================
+[2026-10-05T21:32:10+05:30] Implement Phase 9 Docker deployment and hardening
+================================================================================
+User Prompt (verbatim):
+Implement Phase 9 (Recommended)
+
+Agent Response:
+Implemented Phase 9 deployment preparation using the existing MediDesk architecture. Added a Redis service for shared production rate-limit state, non-root backend/frontend container hardening, health checks, migration-on-startup, build-time frontend API configuration, required environment templates, and deployment/security documentation. No business logic or SECURITY.md content was changed.
+
+Agent Response Summary:
+Compose configuration validation passed with synthetic local values. Phase 7 and health regression tests passed 10/10, frontend lint and production build passed with existing React hook dependency warnings, and tracked-content secret checks found no non-example environment files. Docker image builds could not run because the Docker Desktop Linux engine was unavailable; no live deployment or URL is claimed.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* .env.example (Modified)
+* docker-compose.yml (Modified)
+* DEPLOYMENT.md (Created)
+* DEPLOYMENT_ARCHITECTURE.md (Created)
+* DOCKER_SECURITY_CHECKLIST.md (Created)
+* docs/APPROACH.md (Modified)
+* src/backend/.dockerignore (Modified)
+* src/backend/.env.example (Modified)
+* src/backend/Dockerfile (Modified)
+* src/backend/entrypoint.sh (Created)
+* src/frontend/.dockerignore (Modified)
+* src/frontend/Dockerfile (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Inspected existing Flask, Next.js, Docker, Compose, and environment configuration.
+* Added Compose health checks, internal backend networking, Redis persistence, and named MySQL persistence.
+* Added non-root/container capability restrictions and runtime migration startup.
+* Added deployment architecture, operations, rollback, and Docker security checklist documentation.
+* Ran `docker compose config --quiet` successfully with synthetic variables.
+* Ran backend Phase 7 and health tests: 10 passed.
+* Ran frontend lint and production build successfully; existing hook dependency warnings remain.
+* Attempted `docker compose build`; blocked by unavailable Docker Desktop Linux engine.
+* Checked tracked files for non-example environment secrets.

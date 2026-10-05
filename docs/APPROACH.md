@@ -287,3 +287,25 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 - Request fields and text types/lengths are allowlisted. APIs use SQLAlchemy queries, bounded pagination, minimal response fields, and audit events containing identifiers and action/outcome only. Clinical text is not logged. The UI renders record text through normal React interpolation, which escapes markup.
 - Migration `9c27f4d8a611` adds a unique index without rewriting or deleting existing rows. It intentionally fails if pre-existing linked duplicates violate the invariant; resolving such conflicts requires a data-owner decision.
 - Phase 6 automated tests cover role and object authorization, appointment completion/assignment, server-derived identities, duplicate links, validation/mass assignment, legacy record scope, no-delete behavior, and clinical-text-free auditing. Frontend and Docker verification are recorded in the per-turn log; SQLite does not verify MySQL concurrency or live browser behavior.
+
+## 12. Phase 9: Docker Deployment and Production Hardening
+
+### 12.1 Deployment Architecture
+
+- The Compose stack contains Next.js, Flask/Gunicorn, MySQL, and Redis. MySQL and Redis are on an internal-only backend network; only the frontend and API ports are published.
+- The backend runs the existing Alembic migration chain with `flask db upgrade` before Gunicorn starts. Migrations are non-destructive and MySQL state persists in the `mysql_data` named volume.
+- The Next.js public API URL is supplied as a build argument because `NEXT_PUBLIC_*` values are compiled into the browser bundle. Production deployments must use the public HTTPS API URL.
+- Redis provides shared rate-limit state required by production configuration. Development retains local HTTP/CORS settings only for local demonstration.
+
+### 12.2 Container Security
+
+- Backend and frontend images run as non-root users. Compose drops all capabilities for those services, enables `no-new-privileges`, excludes `.env` files from build contexts, and does not expose MySQL.
+- Required secrets, database credentials, and CORS origins are injected at runtime. Production configuration rejects weak secrets, debug mode, HTTP CORS origins, and process-local rate-limit storage.
+- Health checks cover MySQL, Redis, the API health endpoint, and the frontend. Security headers remain implemented by the Phase 7 Flask middleware, including production-only HSTS.
+
+### 12.3 Phase 9 Verification
+
+- Compose configuration validation passed with synthetic local environment values.
+- Backend Phase 7 and health regression tests: 10 passed.
+- Frontend lint and optimized production build passed with existing React hook dependency warnings.
+- Docker image builds and full browser/database persistence flows require an available Docker Engine and remain environment-dependent; no live deployment URL is claimed.
