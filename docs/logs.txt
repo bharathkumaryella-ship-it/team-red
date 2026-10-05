@@ -882,3 +882,58 @@ Files Modified / Created:
 
 Actions Taken:
 * Recorded the commit containing Docker Desktop startup guidance.
+================================================================================
+[2026-10-05T15:15:16+05:30] Diagnosing Docker virtualization support failure
+================================================================================
+User Prompt (verbatim):
+<current_datetime>2026-10-05T15:14:49.882+05:30</current_datetime>
+
+igned) ; (& c:\Users\bhara\BuildSecure\.venv\Scripts\Activate.ps1)
+(.venv) PS C:\Users\bhara\BuildSecure> docker info
+Docker : The term 'docker' is not recognized as the name of a cmdlet, function,
+script file, or operable program. Check the spelling of the name, or if a path was
+included, verify that the path is correct and try again.
+At line:1 char:1
++ docker info
++ ~~~~~~
+    + CategoryInfo          : ObjectNotFound: (docker:String) [], CommandNotFoundEx
+   ception
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+(.venv) PS C:\Users\bhara\BuildSecure>
+
+<system_reminder>
+The user mentioned images and they have been attached to this message in the order they were mentioned.
+</system_reminder>
+<system_reminder>
+The following attached files are read-only snapshots of content the user shared (pasted text, an unsaved editor, or a diff view) and must not be edited:
+- c:\Users\bhara\AppData\Roaming\Code\agentSessionData\7c69f4c8-f87e-4f25-ad24-1f2310ec5432\attachments\9b35cd1e-6639-4469-90d9-597e0e64193f\Pasted Image.png
+</system_reminder>
+
+Image content: Docker Desktop reports “Virtualization support not detected” and says Docker Desktop failed to start because virtualization support was not detected; asks the user to contact IT or check system requirements.
+
+<tagged_files>
+* c:\Users\bhara\BuildSecure\metadata\team.yaml (20 lines)
+</tagged_files>
+
+Agent Response:
+The screenshot identifies the primary blocker: Docker Desktop itself cannot start because hardware/firmware virtualization is not detected. That explains why docker is unavailable; your Flask code and Python virtual environment are not the cause.
+
+Check Windows Task Manager → Performance → CPU → Virtualization:
+- If it says Disabled, reboot into BIOS/UEFI and enable the CPU virtualization option (Intel VT-x/Virtualization Technology or AMD SVM Mode/AMD-V), save, and reboot. On a managed device, ask IT to enable it.
+- If it says Enabled but Docker still reports no support, make sure the Windows Windows Subsystem for Linux and Virtual Machine Platform optional features are enabled, then reboot and start Docker Desktop again. If Windows itself is running inside another VM, nested virtualization must be enabled by the host administrator.
+
+After Docker Desktop starts successfully, open a fresh PowerShell and run docker info, then run the build and container commands separately. If you cannot enable virtualization on this machine, build/run the backend on a machine or CI runner with Docker enabled. No repository code change is needed for this system-level blocker.
+
+Agent Response Summary:
+Used the new screenshot error to distinguish a Docker engine virtualization prerequisite failure from a backend problem. Gave targeted checks for firmware virtualization, Windows virtualization features, and nested virtualization, without changing source code.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Re-read AGENTS.md, checked the existing agreement record, recent logs, architecture notes, src/backend layout, Git status, and team remote.
+* Appended this user turn and troubleshooting response to docs/logs.txt.
