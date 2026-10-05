@@ -10090,7 +10090,7 @@ Agent Response Summary:
 Resolved the blank white page by updating `middleware.ts` to support Next.js development HMR/eval requirements and updating `page.tsx` so the landing page renders immediately instead of returning null during initial auth check. Both port 3000 and 3001 now render the full UI with HTTP 200 OK.
 
 Commit SHA:
-Pending
+5dbc3bf
 
 Files Modified / Created:
 * src/frontend/middleware.ts (Modified)
