@@ -8007,7 +8007,7 @@ Agent Response Summary:
 Provided the exact commands to run the project from the repo root with the bundled Docker Compose stack and the backend-only local development path. Identified the required env file, ports, and the relevant deployment guidance in the repository.
 
 Commit SHA:
-Pending
+d7b4b87
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
