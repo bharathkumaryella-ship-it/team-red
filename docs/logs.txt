@@ -9486,3 +9486,5 @@ Actions Taken:
 * Documented database-at-rest encryption as an operator responsibility.
 * Preserved unrelated uncommitted changes outside this fix.
 Commit recorded for CSP restoration: 541d1fc0dde1078c66ca870b1da3b4b11b67b8a5
+
+Publication result for final review fix: pushed successfully to `origin/main` under `BuildSecure/` at remote commit `a4c238217487ff67212242cb071c8c620c4e5626`. The published tree includes the restored nonce CSP middleware and dynamic root layout, plus the at-rest encryption responsibility documentation. Unrelated uncommitted changes in `src/backend/app/auth/routes.py` and `src/frontend/next-env.d.ts` were not staged or published.
