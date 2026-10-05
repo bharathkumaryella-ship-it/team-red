@@ -9908,3 +9908,55 @@ Actions Taken:
 * Verified `python run.py` loads cleanly with 0 errors across environments.
 ================================================================================
 
+
+================================================================================
+[2026-10-06T01:18:18+05:30] Senior project and security review completed
+================================================================================
+User Prompt (verbatim):
+give me review of this project and security of the project like a senior expert in cyber security and web developer
+
+Agent Response:
+Senior review completed. Overall assessment: strong hackathon-grade security baseline, but not ready for real healthcare production until dedicated PHI key enforcement, verified HTTPS ingress, encrypted database/volume/backups, and deployment drills are completed.
+
+Security findings:
+1. MEDIUM — Dedicated PHI encryption keys are not fail-closed. `src/backend/app/config.py` falls back to deriving PHI Fernet keys from `SECRET_KEY` when `PHI_ENCRYPTION_KEYS` and `PHI_ENCRYPTION_KEYS_FILE` are absent. This weakens key separation and rotation. Require a dedicated production PHI key/key file and add a startup-failure test.
+2. MEDIUM — Database and backup encryption are not enforced by the repository. Names, emails, timestamps, relationship identifiers, and other metadata remain ordinary database values. The deployment operator must configure encrypted database disks, attachment volumes, snapshots, and backups with protected key custody and restore testing.
+3. MEDIUM — TLS termination is external and unverified. Compose publishes HTTP frontend/API endpoints and relies on a reverse proxy or hosting platform for HTTPS. Verify trusted proxy handling, secure cookies, HSTS, certificate renewal, and ensure port 5000 is not publicly exposed.
+4. MEDIUM — Rate-limit client identity depends on correct proxy configuration. Behind a reverse proxy, incorrect client-IP handling could rate-limit the proxy rather than the user. Configure trusted proxy handling and test through production ingress.
+5. LOW — Dependency and container image supply-chain verification is incomplete. Python requirements use ranges, and base/Compose images use mutable tags. Add dependency/image scanning, SBOM generation, and digest pinning or continuous update policy.
+6. LOW — Frontend browser/integration security coverage is limited. Add tests for real-cookie CSRF/CORS behavior, role redirects, CSP/nonce headers, attachment download headers, and escaped rendering.
+
+Verified strengths:
+- Argon2 password hashing, generic authentication errors, HttpOnly/SameSite cookies, production Secure cookies, session invalidation via token version.
+- Backend RBAC and ownership-scoped queries across patients, doctors, admins, appointments, medical records, and attachments.
+- Explicit CORS, trusted mutation-origin checks, parameterized SQLAlchemy queries, bounded pagination/input allowlists, no unsafe HTML sink found.
+- Attachment filename/path handling, UUID storage names, size/type/magic-byte checks, ClamAV fail-closed behavior, authenticated encryption, integrity verification, and safe download headers.
+- Non-root containers, no-new-privileges, dropped capabilities, internal MySQL/Redis/ClamAV networks, persistent volumes, runtime secrets, and migration startup.
+- Generic error responses and logging that avoids passwords, tokens, request bodies, and clinical text.
+
+Validation evidence:
+- Security-review agent reported 121 security-relevant backend tests passed.
+- Earlier complete backend suite: 144 passed with four existing SQLAlchemy legacy API warnings.
+- Frontend lint and production build passed after restoring nonce CSP; existing React hook warnings remain, and Windows Application Control warned about optional SWC but build completed.
+- Worktree is clean on main at the current review baseline.
+- Docker drill, image build, live browser flow, MySQL/Redis/ClamAV integration, migration/restore drill, and TLS ingress tests remain unverified because Docker daemon access failed with a named-pipe permission error.
+
+Overall rating: 7.5/10 for a controlled hackathon demonstration; 5.5/10 for healthcare production readiness until the Priority 0 items are closed.
+
+Priority 0 before real healthcare data: require dedicated PHI key; deploy behind verified HTTPS; enable and verify encryption at rest for DB/volumes/backups; validate secret rotation and restore/migration/malware scanning drills.
+Priority 1 before public exposure: integration tests through ingress; verify Redis rate limiting across Gunicorn workers; dependency/container scanning; frontend security tests; review account lockout/abuse controls.
+Priority 2 operational maturity: immutable audit events, retention/alerting policy, SBOM and image digests, deployment preflight checks.
+
+Agent Response Summary:
+Completed a read-only senior review of the MediDesk architecture, backend, frontend, authentication, authorization, healthcare data protection, containers, deployment assumptions, tests, and demo readiness. The project has a strong hackathon-grade baseline, but production healthcare use requires dedicated PHI key enforcement, verified HTTPS ingress, encrypted storage/backups, and integration/drill validation.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Ran a dedicated read-only security review.
+* Inspected current configuration, PHI encryption, Compose networking, deployment report, and git state.
+* Recorded verified strengths, residual risks, testing gaps, and prioritized remediation.
