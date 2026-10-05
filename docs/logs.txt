@@ -8618,7 +8618,7 @@ Agent Response Summary:
 Added seamless SQLite fallback and automatic schema creation for development mode to resolve registration 500 error without requiring an active MySQL/Docker service. Production remains strictly bound to MySQL with PyMySQL.
 
 Commit SHA:
-49bb76c
+9fbf528
 
 Files Modified / Created:
 * src/backend/app/config.py (Modified)
@@ -8631,3 +8631,30 @@ Actions Taken:
 * Added auto db.create_all() and seed initialization in src/backend/app/__init__.py for development.
 * Set DATABASE_URL=sqlite:///medidesk.db in src/backend/.env.
 * Verified test suite passing and verified registration endpoint.
+
+================================================================================
+[2026-10-05T23:21:29+05:30] Clarifying unified login architecture and role routing
+================================================================================
+User Prompt (verbatim):
+there is only patient login page but what about doctor and admin.
+
+Agent Response:
+The login page at /login is a unified authentication portal for all three roles: Patients, Doctors, and Administrators. When you enter credentials on /login, the backend validates them and returns the user's role. The login page automatically redirects each role to its dedicated dashboard:
+* ADMIN -> /admin/dashboard
+* DOCTOR -> /doctor/dashboard
+* PATIENT -> /patient/dashboard
+
+Public self-registration (/register) is intentionally restricted to Patients for security reasons, ensuring untrusted users cannot self-register as Doctors or Admins. Doctors and Admins are created through the Admin portal or initial database seeds. Provided credentials for the pre-seeded Doctor and Admin accounts.
+
+Agent Response Summary:
+Explained the unified /login architecture that routes users to their respective dashboards based on role and clarified why public self-registration is restricted to Patients for clinical security. Provided credentials for the pre-seeded Doctor and Admin test accounts.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Inspected src/frontend/app/login/page.tsx and confirmed role-based routing.
+* Documented doctor, patient, and admin credential workflows and dashboard entry points.
