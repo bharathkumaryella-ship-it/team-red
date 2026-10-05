@@ -9124,3 +9124,92 @@ Actions Taken:
 * Upgraded Next.js and eslint-config-next to 15.5.27 and updated the npm lockfile.
 * Added request-scoped nonce CSP and frontend response security headers.
 * Updated approach documentation and reviewed static diffs; no tests/build run.
+
+================================================================================
+[2026-10-06T00:26:30+05:30] Close remaining medical data and upload risks
+================================================================================
+User Prompt (verbatim):
+fix remaining ones
+
+Agent Response:
+I am addressing the remaining data-at-rest and upload-scanning gaps. I will add authenticated field/file encryption with a controlled key configuration and migration for existing medical-record text, plus fail-closed malware scanning for attachments using a private ClamAV service. I will document key generation, rotation, and runtime requirements. These changes require production secrets to be configured before startup.
+
+Agent Response Summary:
+Implement encryption for clinical data in the database and attachment storage, preserving existing records through an Alembic data migration. Add isolated malware scanning for uploaded files and fail closed when the scanner is unavailable.
+
+Commit SHA:
+PENDING
+
+Files Modified / Created:
+* PENDING
+
+Actions Taken:
+* Inspected medical record/attachment models, migrations, backend configuration, and Compose deployment.
+* Checked official ClamAV container documentation for deployment details.
+
+================================================================================
+[2026-10-06T00:29:00+05:30] Continue remaining data and upload protections
+================================================================================
+User Prompt (verbatim):
+continue
+
+Agent Response:
+Continuing the same hardening task. I found that the backend image did not include its Alembic migration directory or configuration, although its entrypoint runs migrations. I am including that deployment defect in the changes so the encryption and attachment-table migration can execute in Compose.
+
+Agent Response Summary:
+Continue implementation of PHI encryption and upload malware scanning, and include the missing migrations in the backend image. Keep the encryption key mandatory and the scanner fail-closed.
+
+Commit SHA:
+PENDING
+
+Files Modified / Created:
+* PENDING
+
+Actions Taken:
+* Confirmed the production entrypoint invokes Alembic and Dockerfile omitted migration assets.
+* Checked official cryptography MultiFernet and ClamAV INSTREAM protocol documentation.
+
+================================================================================
+[2026-10-06T00:41:39+05:30] Complete remaining PHI and attachment protections
+================================================================================
+User Prompt (verbatim):
+continue
+
+Agent Response:
+Completed authenticated encryption for selected clinical database fields and attachment bytes, added a fail-closed ClamAV scan before attachment storage, created an idempotent data migration for existing records/files, and wired keys, scanner, persistent attachment storage, and Alembic assets into deployment. Updated patient-facing wording to match the implemented protections and documented backup/key requirements. User names and email addresses remain searchable plaintext; phone numbers are encrypted. Static diff validation passed; tests and builds were not run.
+
+Agent Response Summary:
+Encrypted phone, appointment details, clinical record/profile fields, filenames, and attachment content at rest with Fernet. Existing plaintext records are migrated, new uploads require a clean ClamAV verdict, and failures deny upload. Added key and deployment documentation and clarified encryption scope.
+
+Commit SHA:
+PENDING
+
+Files Modified / Created:
+* .env.example (Modified)
+* docker-compose.yml (Modified)
+* docs/APPROACH.md (Modified)
+* docs/logs.txt (Modified)
+* src/backend/Dockerfile (Modified)
+* src/backend/app/__init__.py (Modified)
+* src/backend/app/config.py (Modified)
+* src/backend/app/models/appointment.py (Modified)
+* src/backend/app/models/attachment.py (Modified)
+* src/backend/app/models/medical_record.py (Modified)
+* src/backend/app/models/patient_profile.py (Modified)
+* src/backend/app/models/user.py (Modified)
+* src/backend/app/routes/attachments.py (Modified)
+* src/backend/app/security/__init__.py (Created)
+* src/backend/app/security/malware_scan.py (Created)
+* src/backend/app/security/phi_encryption.py (Created)
+* src/backend/migrations/versions/f5a7c1e92b40_encrypt_phi_add_attachment_storage.py (Created)
+* src/backend/requirements.txt (Modified)
+* src/frontend/app/admin/patients/[patientId]/page.tsx (Modified)
+* src/frontend/app/patient/book-appointment/page.tsx (Modified)
+* src/frontend/app/patient/medical-records/page.tsx (Modified)
+* src/frontend/app/patient/profile/page.tsx (Modified)
+* src/frontend/app/register/page.tsx (Modified)
+
+Actions Taken:
+* Reviewed encryption, ClamAV protocol handling, database migration, app startup, Docker deployment, and user-facing security claims.
+* Corrected architecture scope notes and configuration import ordering.
+* Ran git diff --check; no whitespace errors. No tests or builds run.

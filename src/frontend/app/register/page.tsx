@@ -59,7 +59,7 @@ export default function RegisterPage() {
           <div className="auth-branding-features">
             <div className="auth-feature">
               <div className="auth-feature-icon"><Shield size={18} /></div>
-              <span>Secure account with encrypted credentials</span>
+              <span>Passwords are protected with one-way Argon2id hashing</span>
             </div>
             <div className="auth-feature">
               <div className="auth-feature-icon"><CalendarDays size={18} /></div>

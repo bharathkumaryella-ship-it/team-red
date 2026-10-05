@@ -1,17 +1,22 @@
 """Secure File Handling Blueprint for MediDesk clinical attachments."""
 
 import hashlib
+import hmac
+import io
 import os
 import uuid
 import logging
 from pathlib import Path
 
 from flask import Blueprint, current_app, request, jsonify, send_file, Response
+from cryptography.fernet import InvalidToken
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models import MedicalRecord, MedicalAttachment, UserRole
 from app.auth.utils import require_authentication, get_current_user
+from app.security.malware_scan import MalwareDetected, ScannerUnavailable, scan_upload
+from app.security.phi_encryption import decrypt_file, encrypt_file
 
 attachments_bp = Blueprint("attachments", __name__, url_prefix="/api")
 logger = logging.getLogger("attachments")
@@ -119,6 +124,23 @@ def upload_attachment(record_id: int):
             "error": "File signature verification failed. File content does not match extension."
         }), 400
 
+    try:
+        scan_upload(content)
+    except MalwareDetected:
+        logger.warning(
+            "Malware rejected in attachment upload (record_id=%s uploader_id=%s)",
+            record.id,
+            current_user.id,
+        )
+        return jsonify({"error": "The uploaded file was rejected by security scanning"}), 422
+    except ScannerUnavailable:
+        logger.error(
+            "Attachment scanning unavailable (record_id=%s uploader_id=%s)",
+            record.id,
+            current_user.id,
+        )
+        return jsonify({"error": "Secure file scanning is temporarily unavailable"}), 503
+
     # Generate isolated UUID storage filename outside public document root
     storage_filename = f"{uuid.uuid4().hex}{ext}"
     storage_dir = _get_storage_dir()
@@ -129,7 +151,7 @@ def upload_attachment(record_id: int):
         # Exclusive creation prevents overwriting any pre-existing path.
         with open(destination, "xb") as f:
             file_created = True
-            f.write(content)
+            f.write(encrypt_file(content))
         os.chmod(destination, 0o600)
 
         attachment = MedicalAttachment(
@@ -246,8 +268,25 @@ def download_attachment(record_id: int, attachment_id: int):
         return jsonify({"error": "Attachment file not found on disk"}), 404
 
     # Serve as strict attachment to prevent browser executing untrusted content
+    try:
+        content = decrypt_file(filepath.read_bytes())
+    except (InvalidToken, OSError, ValueError) as exc:
+        logger.error(
+            "Attachment integrity check failed (attachment_id=%s exception_type=%s)",
+            attachment.id,
+            type(exc).__name__,
+        )
+        return jsonify({"error": "The attachment could not be read securely"}), 500
+
+    actual_hash = hashlib.sha256(content).hexdigest()
+    if len(content) != attachment.file_size or not hmac.compare_digest(
+        actual_hash, attachment.sha256_hash
+    ):
+        logger.error("Attachment integrity check failed (attachment_id=%s)", attachment.id)
+        return jsonify({"error": "The attachment could not be read securely"}), 500
+
     response = send_file(
-        filepath,
+        io.BytesIO(content),
         mimetype=attachment.mime_type,
         as_attachment=True,
         download_name=attachment.original_filename,

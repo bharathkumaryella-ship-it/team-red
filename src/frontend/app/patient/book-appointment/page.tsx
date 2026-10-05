@@ -441,7 +441,7 @@ export default function BookAppointmentPage() {
               <div style={{ display: 'flex', gap: '12px' }}>
                 <ShieldCheck size={16} color="var(--color-success)" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <p className="text-sm" style={{ margin: 0 }}>
-                  <strong>Confidentiality Protected:</strong> Your appointment reason and medical data are encrypted in accordance with HIPAA standards.
+                  <strong>Confidentiality Protected:</strong> Appointment reasons, clinical notes, phone numbers, selected profile fields, and uploaded files are encrypted at rest using clinic-managed keys.
                 </p>
               </div>
 

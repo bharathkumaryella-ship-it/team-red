@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 from app.extensions import db
+from app.security.phi_encryption import EncryptedText
 
 
 class AppointmentStatus(str, Enum):
@@ -26,8 +27,8 @@ class Appointment(db.Model):
     start_at = db.Column(db.DateTime, nullable=False, index=True)
     end_at = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.Enum(AppointmentStatus), nullable=False, default=AppointmentStatus.PENDING, index=True)
-    reason = db.Column(db.String(500), nullable=True)
-    notes = db.Column(db.Text, nullable=True)
+    reason = db.Column(EncryptedText(), nullable=True)
+    notes = db.Column(EncryptedText(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow

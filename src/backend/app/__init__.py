@@ -8,6 +8,7 @@ from typing import Any
 from flask import Flask, session, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
+from sqlalchemy import inspect
 
 from app.config import get_config, validate_config
 from app.extensions import db
@@ -94,11 +95,28 @@ def create_app(
         from app import models  # noqa: F401
         if app.config["ENVIRONMENT"] == "development":
             try:
-                db.create_all()
+                from flask_migrate import stamp, upgrade
+
+                tables = set(inspect(db.engine).get_table_names())
+                baseline_tables = {
+                    "users",
+                    "patient_profiles",
+                    "doctor_profiles",
+                    "appointments",
+                    "medical_records",
+                }
+                if "alembic_version" not in tables and baseline_tables.issubset(tables):
+                    # Older development databases were created with create_all().
+                    stamp(revision="9c27f4d8a611")
+                upgrade()
                 from app.models import User
                 if User.query.first() is None:
                     from app.seeds import seed_development_data
                     seed_development_data()
             except Exception as e:
-                app.logger.warning("Could not auto-initialize development database: %s", e)
+                app.logger.error(
+                    "Development database migration or initialization failed; refusing startup (%s)",
+                    type(e).__name__,
+                )
+                raise
     return app

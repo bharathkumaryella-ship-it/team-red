@@ -81,7 +81,7 @@ export default function PatientMedicalRecordsPage() {
         <div className="page-header-actions">
           <div className="navbar-security-badge">
             <Shield size={14} />
-            <span>End-to-End Encrypted Records</span>
+            <span>Encrypted At-Rest Record Storage</span>
           </div>
         </div>
       </div>

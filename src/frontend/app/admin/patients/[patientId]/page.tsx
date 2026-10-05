@@ -172,7 +172,7 @@ export default function AdminPatientDetailPage() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <FileText size={16} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <p className="text-sm" style={{ margin: 0 }}>
-                  <strong>Patient ID #{patient.id}:</strong> Demographic and contact records are encrypted in the central hospital database.
+                  <strong>Patient ID #{patient.id}:</strong> Clinical notes, phone numbers, and selected sensitive profile fields are encrypted at rest; account names and email identifiers remain searchable.
                 </p>
               </div>
 

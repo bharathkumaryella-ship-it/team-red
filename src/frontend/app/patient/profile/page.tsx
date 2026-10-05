@@ -273,7 +273,7 @@ export default function PatientProfilePage() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <FileCheck size={16} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <p className="text-sm" style={{ margin: 0 }}>
-                  <strong>HIPAA Regulated Storage:</strong> Your medical identifiers and demographic attributes are strictly isolated within high-integrity storage tiers.
+                  <strong>Protected Profile Fields:</strong> Phone number, date of birth, gender, blood group, and address are encrypted at rest; account names and email remain searchable.
                 </p>
               </div>
 

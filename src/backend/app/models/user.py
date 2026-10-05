@@ -7,6 +7,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 
 from app.extensions import db
+from app.security.phi_encryption import EncryptedText
 
 # Initialize Argon2id hasher
 _ph = PasswordHasher()
@@ -29,11 +30,11 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     full_name = db.Column(db.String(255), nullable=False)
-    phone = db.Column(db.String(20), nullable=True)
+    phone = db.Column(EncryptedText(), nullable=True)
     role = db.Column(db.Enum(UserRole), nullable=False, index=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
-    token_version = db.Column(db.Integer, nullable=False, default=1)
-    failed_login_attempts = db.Column(db.Integer, nullable=False, default=0)
+    token_version = db.Column(db.Integer, nullable=False, default=1, server_default=db.text("1"))
+    failed_login_attempts = db.Column(db.Integer, nullable=False, default=0, server_default=db.text("0"))
     locked_until = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(

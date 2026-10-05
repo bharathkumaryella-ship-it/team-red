@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import os
 from collections.abc import Mapping
 from typing import Any
@@ -9,6 +11,30 @@ from urllib.parse import urlsplit
 
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.exc import ArgumentError
+
+
+def _phi_encryption_keys(environment: str) -> tuple[str, ...]:
+    if environment == "testing":
+        test_key = base64.urlsafe_b64encode(
+            hashlib.sha256(b"medidesk-test-only-phi-key").digest()
+        ).decode("ascii")
+        return (test_key,)
+
+    raw_keys = os.getenv("PHI_ENCRYPTION_KEYS", "").strip()
+    if not raw_keys:
+        raise ValueError("PHI_ENCRYPTION_KEYS must be configured with generated Fernet keys.")
+
+    keys = tuple(key.strip() for key in raw_keys.split(",") if key.strip())
+    try:
+        from cryptography.fernet import Fernet
+
+        for key in keys:
+            Fernet(key.encode("ascii"))
+    except (UnicodeEncodeError, ValueError, TypeError):
+        raise ValueError("PHI_ENCRYPTION_KEYS must contain valid URL-safe Fernet keys.") from None
+    if not keys:
+        raise ValueError("PHI_ENCRYPTION_KEYS must contain at least one key.")
+    return keys
 
 
 def _database_uri(environment: str = "development") -> str:
@@ -138,6 +164,7 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
             "TESTING": True,
             "SECRET_KEY": "testing-only-not-a-production-secret",
             "JWT_SECRET_KEY": "",
+            "PHI_ENCRYPTION_KEYS": _phi_encryption_keys(environment),
             "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
             "SQLALCHEMY_TRACK_MODIFICATIONS": False,
             "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": True},
@@ -172,6 +199,7 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
         "TESTING": False,
         "SECRET_KEY": os.getenv("SECRET_KEY", ""),
         "JWT_SECRET_KEY": os.getenv("JWT_SECRET_KEY", ""),
+        "PHI_ENCRYPTION_KEYS": _phi_encryption_keys(environment),
         "SQLALCHEMY_DATABASE_URI": db_uri,
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
         "SQLALCHEMY_ENGINE_OPTIONS": engine_options,
@@ -185,6 +213,9 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
         "RATELIMIT_STORAGE_URI": os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
         "AUTH_REGISTER_LIMIT": os.getenv("AUTH_REGISTER_LIMIT", "5 per hour"),
         "AUTH_LOGIN_LIMIT": os.getenv("AUTH_LOGIN_LIMIT", "10 per hour"),
+        "CLAMD_HOST": os.getenv("CLAMD_HOST", "clamav"),
+        "CLAMD_PORT": int(os.getenv("CLAMD_PORT", "3310")),
+        "CLAMD_TIMEOUT_SECONDS": int(os.getenv("CLAMD_TIMEOUT_SECONDS", "30")),
     }
 
 
@@ -221,3 +252,9 @@ def validate_config(config: Mapping[str, Any]) -> None:
                 raise ValueError("Production CORS origins must use HTTPS.")
         if config["RATELIMIT_STORAGE_URI"].startswith("memory://"):
             raise ValueError("Production rate limiting requires shared persistent storage.")
+        if not config.get("CLAMD_HOST"):
+            raise ValueError("Production attachment uploads require a ClamAV host.")
+    if not 1 <= int(config.get("CLAMD_PORT", 3310)) <= 65535:
+        raise ValueError("CLAMD_PORT must be between 1 and 65535.")
+    if not 1 <= int(config.get("CLAMD_TIMEOUT_SECONDS", 30)) <= 300:
+        raise ValueError("CLAMD_TIMEOUT_SECONDS must be between 1 and 300.")

@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from app.extensions import db
+from app.security.phi_encryption import EncryptedDate, EncryptedText
 
 
 class PatientProfile(db.Model):
@@ -12,10 +13,10 @@ class PatientProfile(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), unique=True, nullable=False, index=True)
-    date_of_birth = db.Column(db.Date, nullable=True)
-    gender = db.Column(db.String(50), nullable=True)
-    blood_group = db.Column(db.String(10), nullable=True)
-    address = db.Column(db.String(500), nullable=True)
+    date_of_birth = db.Column(EncryptedDate(), nullable=True)
+    gender = db.Column(EncryptedText(), nullable=True)
+    blood_group = db.Column(EncryptedText(), nullable=True)
+    address = db.Column(EncryptedText(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow

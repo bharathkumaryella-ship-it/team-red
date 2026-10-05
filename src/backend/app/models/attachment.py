@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from app.extensions import db
+from app.security.phi_encryption import EncryptedText
 
 
 class MedicalAttachment(db.Model):
@@ -22,7 +23,7 @@ class MedicalAttachment(db.Model):
         db.ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    original_filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(EncryptedText(), nullable=False)
     storage_filename = db.Column(db.String(255), unique=True, nullable=False)
     mime_type = db.Column(db.String(100), nullable=False)
     file_size = db.Column(db.Integer, nullable=False)

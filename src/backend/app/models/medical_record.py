@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from app.extensions import db
+from app.security.phi_encryption import EncryptedText
 
 
 class MedicalRecord(db.Model):
@@ -14,9 +15,9 @@ class MedicalRecord(db.Model):
     patient_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     doctor_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id", ondelete="RESTRICT"), nullable=True)
-    diagnosis = db.Column(db.Text, nullable=True)
-    notes = db.Column(db.Text, nullable=True)
-    prescription = db.Column(db.Text, nullable=True)
+    diagnosis = db.Column(EncryptedText(), nullable=True)
+    notes = db.Column(EncryptedText(), nullable=True)
+    prescription = db.Column(EncryptedText(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
