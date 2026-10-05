@@ -109,7 +109,7 @@ def test_production_config_rejects_placeholder_secrets(monkeypatch):
 def test_production_config_rejects_process_local_rate_limits(monkeypatch):
     monkeypatch.setenv(
         "DATABASE_URL",
-        "******localhost/test-db",
+        "mysql+pymysql://testuser:testpassword@localhost/test-db",
     )
     monkeypatch.setenv("SECRET_KEY", "s" * 48)
     monkeypatch.setenv("JWT_SECRET_KEY", "j" * 48)
