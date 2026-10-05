@@ -532,7 +532,7 @@ class TestCascadeDelete:
             db.session.delete(user)
             db.session.commit()
 
-            assert PatientProfile.query.get(profile_id) is None
+            assert db.session.get(PatientProfile, profile_id) is None
 
     def test_user_delete_cascades_to_doctor_profile(self, app):
         """Test that deleting a doctor user cascades to doctor profile."""
@@ -559,7 +559,7 @@ class TestCascadeDelete:
             db.session.delete(user)
             db.session.commit()
 
-            assert DoctorProfile.query.get(profile_id) is None
+            assert db.session.get(DoctorProfile, profile_id) is None
 
     def test_appointment_delete_cascades_to_medical_records(self, app):
         """Test that deleting an appointment cascades to medical records."""
@@ -606,5 +606,5 @@ class TestCascadeDelete:
             db.session.delete(appointment)
             db.session.commit()
 
-            assert Appointment.query.get(appointment_id) is None
-            assert MedicalRecord.query.get(record_id) is None
+            assert db.session.get(Appointment, appointment_id) is None
+            assert db.session.get(MedicalRecord, record_id) is None

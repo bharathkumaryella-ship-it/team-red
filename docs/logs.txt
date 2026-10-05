@@ -8682,7 +8682,7 @@ Agent Response Summary:
 Expanded the doctors list from 2 to 8 doctors with various medical specializations in src/backend/app/seeds.py and refreshed the local database.
 
 Commit SHA:
-4e6cb9a
+580c58a
 
 Files Modified / Created:
 * src/backend/app/seeds.py (Modified)
@@ -8691,3 +8691,32 @@ Files Modified / Created:
 Actions Taken:
 * Added 6 additional doctor profiles to src/backend/app/seeds.py across multiple clinical specialties.
 * Executed seed_development_data() to update the local SQLite database.
+
+================================================================================
+[2026-10-05T23:30:15+05:30] Full-stack codebase error audit and deprecation cleanup
+================================================================================
+User Prompt (verbatim):
+check errors in this project . fix bugs in it
+
+Agent Response:
+Conducted a full-stack audit across frontend and backend:
+1. Frontend (Next.js 14): Ran `npm run build`; verified all 20 routes compile cleanly with zero TypeScript errors.
+2. Backend (Flask / Python 3.11): Ran `python -m compileall`; verified zero syntax or import errors.
+3. Test Suite & Deprecations: Fixed legacy `Model.query.get()` calls in `src/backend/tests/test_models.py`, migrating them to `db.session.get()`. All 144 test cases now pass in 30.37s with 0 warnings.
+4. Runtime Endpoints: Verified authentication, doctor directory, appointment scheduling, and health check endpoints are operating without errors.
+
+Agent Response Summary:
+Audited the entire project for syntax, type, compilation, and test errors. Resolved SQLAlchemy 2.0 deprecations in test_models.py, verified all 20 Next.js routes build successfully, and confirmed all 144 backend tests pass with zero warnings.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/backend/tests/test_models.py (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Ran Next.js production build (`npm run build`) - 20/20 routes compiled successfully.
+* Ran Python compileall across src/backend.
+* Replaced legacy `Model.query.get()` with `db.session.get()` in `src/backend/tests/test_models.py`.
+* Executed full pytest suite (144 passed, 0 warnings).
