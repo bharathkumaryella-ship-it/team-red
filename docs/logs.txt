@@ -9872,3 +9872,39 @@ Files Modified / Created:
 
 Actions Taken:
 * Recorded the review request before inspection.
+
+================================================================================
+[2026-10-06T01:21:45+05:30] Resolve Backend SQLite Schema Columns and PHI Key Auto-Migration on Startup
+================================================================================
+User Prompt (verbatim):
+PS C:\Users\bhara\BuildSecure> ^C
+PS C:\Users\bhara\BuildSecure> cd c:\Users\bhara\BuildSecure\src\backend
+>> python -m pip install -r requirements.txt
+>> python run.py
+>> 
+Requirement already satisfied: Flask<4,>=3.1 in C:\Users\bhara\AppData\Local\Programs\Python\Python311\Lib\site-packages (from -r requirements.txt (line 1)) (3.1.3)
+...
+{"timestamp":"...","level":"WARNING","logger":"app","message":"Could not auto-initialize development database: (sqlite3.OperationalError) no such column: users.token_version\n[SQL: SELECT users.id AS users_id, users.email AS users_email, users.password_hash AS users_password_hash, users.full_name AS users_full_name, users.phone AS users_phone, users.role AS users_role, users.is_active AS users_is_active, users.token_version AS users_token_version, users.failed_login_attempts AS users_failed_login_attempts, users.locked_until AS users_locked_until, users.created_at AS users_created_at, users.updated_at AS users_updated_at \nFROM users\n LIMIT ? OFFSET ?]\n[parameters: (1, 0)]\n(Background on this error at: https://sqlalche.me/e/21/e3q8)"}
+ValueError: PHI_ENCRYPTION_KEYS must be configured
+
+Agent Response:
+Identified and resolved the two backend startup issues:
+1. `users.token_version` OperationalError: The local development database `instance/medidesk.db` was created before security columns were introduced to the `User` model. Executed Flask-Migrate schema upgrade (`stamp` -> `9c27f4d8a611` -> `f5a7c1e92b40`), successfully migrating the local database schema to add `token_version`, `failed_login_attempts`, `locked_until`, and `medical_attachments`.
+2. `PHI_ENCRYPTION_KEYS` ValueError: Configured a deterministic fallback Fernet encryption key derived from `SECRET_KEY` in `src/backend/app/config.py` when `PHI_ENCRYPTION_KEYS` is unset in development.
+3. Verification: Successfully verified that `python run.py` loads cleanly without errors under both the virtual environment and global Python 3.11.
+
+Agent Response Summary:
+Upgraded the local development SQLite database schema with Flask-Migrate Alembic upgrade so `token_version` and lockout columns are present. Configured fallback Fernet keys for local development. Both local interpreters now run `python run.py` cleanly without errors or warnings.
+
+Commit SHA:
+1c788df
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Executed Alembic migration upgrade on development SQLite database `instance/medidesk.db`.
+* Verified all 12 columns on `users` table including `token_version`, `failed_login_attempts`, and `locked_until`.
+* Verified `python run.py` loads cleanly with 0 errors across environments.
+================================================================================
+
