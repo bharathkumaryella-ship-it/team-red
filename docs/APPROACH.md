@@ -309,3 +309,16 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 - Backend Phase 7 and health regression tests: 10 passed.
 - Frontend lint and optimized production build passed with existing React hook dependency warnings.
 - Docker image builds and full browser/database persistence flows require an available Docker Engine and remain environment-dependent; no live deployment URL is claimed.
+
+## 13. Phase 10: Final Security Analysis and Jury Readiness
+
+### 13.1 Security Remediation
+
+- Compose defaults to production mode and requires an explicit development override for local HTTP demonstrations.
+- The API host binding defaults to loopback, preventing direct public plaintext exposure; production traffic should enter through a TLS reverse proxy.
+- Final controls, residual risks, and validation evidence are recorded in `FINAL_SECURITY_REPORT.md`.
+
+### 13.2 Demonstration Readiness
+
+- `JURY_DEMO.md` defines a synthetic Patient, Doctor, and Admin walkthrough plus safe denial cases for authentication, RBAC, IDOR, rate limiting, origin checks, validation, and security headers.
+- Docker image and full browser/persistence tests remain pending until a Docker Desktop Linux engine is available. No live deployment URL is claimed.

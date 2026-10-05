@@ -14,16 +14,17 @@ only; the frontend and API ports are the only host-published ports.
 
 ## Local setup
 
+For a local development demonstration:
+
 ```powershell
 Copy-Item .env.example .env
-# Replace every replace-* value in .env with local values.
-docker compose config
-docker compose up --build
+# Use generated local secrets and run with the explicit development override.
+docker compose -f docker-compose.yml -f docker-compose.dev.yml config
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-Open `http://localhost:3000`. The checked-in example uses development mode so
-secure cookies can be tested over local HTTP. Never use those settings for a
-public deployment.
+Open `http://localhost:3000`. The development override is explicit and binds
+the API only to loopback. Never use it for a public deployment.
 
 ## Production configuration
 

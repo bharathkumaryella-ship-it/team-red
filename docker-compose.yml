@@ -41,7 +41,7 @@ services:
     build:
       context: ./src/backend
     environment:
-      FLASK_ENV: ${FLASK_ENV:-development}
+      FLASK_ENV: ${FLASK_ENV:-production}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
       MYSQL_HOST: mysql
@@ -60,7 +60,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "5000:5000"
+      - "${BACKEND_BIND_ADDRESS:-127.0.0.1}:5000:5000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=3)"]
       interval: 10s
