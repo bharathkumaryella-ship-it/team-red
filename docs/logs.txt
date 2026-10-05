@@ -840,3 +840,14 @@ Files Modified / Created:
 Actions Taken:
 * Re-read AGENTS.md and checked the agreement record, latest log, project approach, backend source layout, repository status, and team remote.
 * Appended this turn to docs/logs.txt.
+================================================================================
+[2026-10-05T15:13:11+05:30] Commit reference for Docker CLI follow-up
+================================================================================
+Commit SHA:
+a65ee455290d45b5a82cd48f9781a07e6c0bb538
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Recorded the commit containing this turn's Docker troubleshooting log.
