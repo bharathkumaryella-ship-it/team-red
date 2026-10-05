@@ -4,8 +4,8 @@
 version: "1.0"
 
 submission:
-  team_id: ""
-  repository: ""
+  team_id: "-06"
+  repository: "https://github.com/bharathkumaryella-ship-it/team-red"
   commit_sha: ""
   deployment_url: ""
   submitted_at: ""

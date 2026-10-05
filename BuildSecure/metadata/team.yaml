@@ -4,16 +4,16 @@
 # - If your team has 4 members: provide all 4 members.
 
 team:
-  team_id: ""
-  name: ""
-  repository: "" # URL of the newly created GitHub repository for this project
+  team_id: "-06"
+  name: "TEAM RED"
+  repository: "https://github.com/bharathkumaryella-ship-it/team-red"
 
 members:
-  - name: ""
-    email: ""
-  - name: ""
-    email: ""
-  - name: ""
-    email: ""
-  - name: ""
-    email: ""
+  - name: "Abhishek sarangi"
+    email: "sarangiabhishek2005@gmail.com"
+  - name: "Bharath Kumar Yella"
+    email: "bharathkumaryella@gmail.com"
+  - name: "Sathvika Dudimetla"
+    email: "sathvikadudimetla087@gmail.com"
+  - name: "Vindhya Sri Dega"
+    email: "degavindhyasri@gmail.com"
