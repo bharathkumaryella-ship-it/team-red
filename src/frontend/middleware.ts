@@ -14,9 +14,9 @@ export function middleware(request: NextRequest) {
   const directives = [
     "default-src 'self'",
     scriptDirectives,
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob:",
-    "font-src 'self' data:",
+    "font-src 'self' data: https://fonts.gstatic.com",
     `connect-src 'self' ${apiOrigin} ws: wss:`,
     "object-src 'none'",
     "base-uri 'self'",

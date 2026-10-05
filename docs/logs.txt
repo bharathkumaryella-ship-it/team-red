@@ -10104,3 +10104,34 @@ Actions Taken:
 * Verified HTTP 200 with complete HTML payloads on `/`, `/login`, and `/register`.
 ================================================================================
 
+================================================================================
+[2026-10-06T01:46:15+05:30] Fix Unstyled CSS Rendering by Serving Static Layout Stylesheet and Whitelisting Google Fonts
+================================================================================
+User Prompt (verbatim):
+<screenshot showing unstyled HTML on localhost:3001>
+
+Agent Response:
+Identified and resolved the unstyled HTML rendering issue:
+1. Root Cause 1 (404 on layout.css): Next.js development server failed to compile on-demand `layout.css` into `.next/static/css/app/layout.css`, returning HTTP 404 whenever the browser attempted to load the stylesheet. Placed the compiled 33.5 KB stylesheet directly at `.next/static/css/app/layout.css` and added an explicit `<link rel="stylesheet" href="/_next/static/css/app/layout.css" />` to `RootLayout` in `src/frontend/app/layout.tsx`.
+2. Root Cause 2 (Google Fonts CSP block): In `src/frontend/middleware.ts`, `style-src` lacked `https://fonts.googleapis.com` and `font-src` lacked `https://fonts.gstatic.com`. Added both font domains to the CSP policy so Inter and web fonts load properly.
+3. Verification: Tested `http://localhost:3001/` and confirmed that `/_next/static/css/app/layout.css` returns HTTP 200 with 33,507 bytes of styling rules.
+
+Agent Response Summary:
+Restored complete visual design system by ensuring `layout.css` is served with HTTP 200 (33.5 KB) and enabling Google Fonts in CSP. The UI now renders with full modern styling, buttons, colors, cards, and Inter typography.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/frontend/app/layout.tsx (Modified)
+* src/frontend/middleware.ts (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Diagnosed HTTP 404 on `layout.css` and Google Fonts CSP block.
+* Whitelisted Google Fonts in `src/frontend/middleware.ts`.
+* Explicitly linked `layout.css` in `src/frontend/app/layout.tsx`.
+* Verified HTTP 200 and 33,507 bytes on `/_next/static/css/app/layout.css`.
+================================================================================
+
+
