@@ -91,4 +91,13 @@ def create_app(
 
     with app.app_context():
         from app import models  # noqa: F401
+        if app.config["ENVIRONMENT"] == "development":
+            try:
+                db.create_all()
+                from app.models import User
+                if User.query.first() is None:
+                    from app.seeds import seed_development_data
+                    seed_development_data()
+            except Exception as e:
+                app.logger.warning("Could not auto-initialize development database: %s", e)
     return app

@@ -11,13 +11,18 @@ from sqlalchemy.engine import URL, make_url
 from sqlalchemy.exc import ArgumentError
 
 
-def _database_uri() -> str:
+def _database_uri(environment: str = "development") -> str:
     database_url = os.getenv("DATABASE_URL", "").strip()
     if database_url:
         try:
             parsed_url = make_url(database_url)
         except (ArgumentError, ValueError):
             raise ValueError("DATABASE_URL is invalid.") from None
+
+        if parsed_url.drivername.startswith("sqlite"):
+            if environment == "production":
+                raise ValueError("SQLite is not supported in production.")
+            return parsed_url.render_as_string(hide_password=False)
 
         if parsed_url.drivername == "mysql":
             parsed_url = parsed_url.set(drivername="mysql+pymysql")
@@ -36,6 +41,12 @@ def _database_uri() -> str:
             )
 
         return parsed_url.render_as_string(hide_password=False)
+
+    if environment == "development":
+        mysql_pwd = os.getenv("MYSQL_PASSWORD", "")
+        # Fallback to local SQLite when MySQL is not configured or still has placeholder
+        if not mysql_pwd or "replace" in mysql_pwd.lower():
+            return "sqlite:///medidesk.db"
 
     required_variables = (
         "MYSQL_HOST",
@@ -144,19 +155,25 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
     if log_level not in allowed_log_levels:
         raise ValueError("LOG_LEVEL is invalid.")
 
+    db_uri = _database_uri(environment)
+    engine_options: dict[str, Any] = {"pool_pre_ping": True}
+    if not db_uri.startswith("sqlite"):
+        engine_options.update(
+            {
+                "pool_recycle": 1800,
+                "connect_args": {"connect_timeout": 5},
+            }
+        )
+
     return {
         "ENVIRONMENT": environment,
         "DEBUG": is_development,
         "TESTING": False,
         "SECRET_KEY": os.getenv("SECRET_KEY", ""),
         "JWT_SECRET_KEY": os.getenv("JWT_SECRET_KEY", ""),
-        "SQLALCHEMY_DATABASE_URI": _database_uri(),
+        "SQLALCHEMY_DATABASE_URI": db_uri,
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-        "SQLALCHEMY_ENGINE_OPTIONS": {
-            "pool_pre_ping": True,
-            "pool_recycle": 1800,
-            "connect_args": {"connect_timeout": 5},
-        },
+        "SQLALCHEMY_ENGINE_OPTIONS": engine_options,
         "CORS_ALLOWED_ORIGINS": _parse_origins(
             os.getenv("CORS_ALLOWED_ORIGINS", ""),
             development=is_development,

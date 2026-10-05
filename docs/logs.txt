@@ -8586,7 +8586,7 @@ Agent Response Summary:
 Diagnosed the 401 on /api/auth/me as normal unauthenticated session-check behavior and traced the 500 on /api/auth/register directly to the missing MySQL server connection on 127.0.0.1:3306. Provided resolution paths via Docker Desktop or adding SQLite development support.
 
 Commit SHA:
-0f1a276
+c58ae7f
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
@@ -8595,3 +8595,39 @@ Actions Taken:
 * Tested /api/auth/register endpoint via Python and confirmed OperationalError (WinError 10061).
 * Verified no service is listening on port 3306.
 * Explained difference between normal 401 on /api/auth/me and the database connection failure on /api/auth/register.
+
+================================================================================
+[2026-10-05T23:12:46+05:30] Enabling SQLite development fallback for registration and auth
+================================================================================
+User Prompt (verbatim):
+GET http://localhost:5000/api/auth/me 401 (UNAUTHORIZED)
+
+api.ts:13 
+ GET http://localhost:5000/api/auth/me 401 (UNAUTHORIZED)
+api.ts:13 
+ POST http://localhost:5000/api/auth/register 500 (INTERNAL SERVER ERROR)
+authRequest	@	api.ts:13
+(anonymous)	@	api.ts:32
+(anonymous)	@	auth-provider.tsx:46
+submit	@	page.tsx:35
+
+Agent Response:
+Configured local SQLite development support in src/backend/app/config.py, automatically initializing the database schema and demo seeds in src/backend/app/__init__.py when running in development mode without an external MySQL instance. This immediately resolves the 500 Internal Server Error on /api/auth/register, allowing user registration and authentication to complete successfully.
+
+Agent Response Summary:
+Added seamless SQLite fallback and automatic schema creation for development mode to resolve registration 500 error without requiring an active MySQL/Docker service. Production remains strictly bound to MySQL with PyMySQL.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/backend/app/config.py (Modified)
+* src/backend/app/__init__.py (Modified)
+* src/backend/.env (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Updated _database_uri in src/backend/app/config.py to support SQLite in development.
+* Added auto db.create_all() and seed initialization in src/backend/app/__init__.py for development.
+* Set DATABASE_URL=sqlite:///medidesk.db in src/backend/.env.
+* Verified test suite passing and verified registration endpoint.
