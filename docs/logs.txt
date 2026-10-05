@@ -10174,5 +10174,43 @@ Actions Taken:
 * Verified 100% of client script chunks and stylesheets return HTTP 200.
 ================================================================================
 
+================================================================================
+[2026-10-06T02:00:15+05:30] Add localhost:3001 to Development CORS Allowlist and Restart Backend Server
+================================================================================
+User Prompt (verbatim):
+Access to fetch at 'http://localhost:5000/api/auth/me' from origin 'http://localhost:3001' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+:5000/api/auth/me:1  Failed to load resource: net::ERR_FAILED
+login:1 Access to fetch at 'http://localhost:5000/api/auth/login' from origin 'http://localhost:3001' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+:5000/api/auth/login:1 
+
+Agent Response:
+Diagnosed and resolved the CORS policy rejection:
+1. Root Cause: In `src/backend/app/config.py` and `src/backend/.env`, `CORS_ALLOWED_ORIGINS` was restricted exclusively to `http://localhost:3000`. When the frontend opened on port 3001, Flask-CORS and `enforce_trusted_mutation_origin` rejected requests with 403 Forbidden and omitted the `Access-Control-Allow-Origin` response header.
+2. Configuration Update: Updated `_parse_origins` in `src/backend/app/config.py` to automatically include development origins (`http://localhost:3000`, `http://localhost:3001`, `http://127.0.0.1:3000`, `http://127.0.0.1:3001`) during local development while strictly preserving explicit HTTPS origins in production. Updated `src/backend/.env` with the complete list of development origins.
+3. Restart & Live Verification: Restarted the backend server (task-1410) and verified via automated HTTP requests:
+   - `GET /api/auth/me` with `Origin: http://localhost:3001`: Returned HTTP 401 with `Access-Control-Allow-Origin: http://localhost:3001` and `Access-Control-Allow-Credentials: true`.
+   - `OPTIONS /api/auth/login` preflight from `Origin: http://localhost:3001`: Returned HTTP 200 with allowed methods `DELETE, GET, OPTIONS, PATCH, POST, PUT`, headers `Content-Type`, and credentials `true`.
+4. Test Suite: Full backend test suite passed with 150/150 passing tests (100%).
+
+Agent Response Summary:
+Configured development CORS to allow port 3001 and restarted the Flask backend server. Verified that both GET and preflight OPTIONS requests from `http://localhost:3001` succeed with complete CORS headers. All 150 backend tests continue to pass.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/backend/app/config.py (Modified)
+* src/backend/.env (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added development origin fallbacks for port 3001 and 127.0.0.1 in `src/backend/app/config.py`.
+* Updated `src/backend/.env` with `CORS_ALLOWED_ORIGINS`.
+* Restarted backend daemon on port 5000.
+* Verified CORS preflight and GET responses from origin `http://localhost:3001`.
+* Ran full backend test suite (150/150 passed).
+================================================================================
+
+
 
 

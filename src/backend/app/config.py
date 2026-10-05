@@ -153,6 +153,11 @@ def _parse_origins(raw_origins: str, *, development: bool) -> list[str]:
         if not development and parsed_origin.scheme != "https":
             raise ValueError("Production CORS origins must use HTTPS.")
 
+    if development:
+        for dev_origin in ("http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"):
+            if dev_origin not in origins:
+                origins.append(dev_origin)
+
     return origins
 
 
@@ -165,6 +170,16 @@ def _read_max_content_length() -> int:
     if max_content_length < 1:
         raise ValueError("MAX_CONTENT_LENGTH must be greater than zero.")
     return max_content_length
+
+
+def _read_trusted_proxy_hops() -> int:
+    try:
+        hops = int(os.getenv("TRUSTED_PROXY_HOPS", "0"))
+    except ValueError:
+        raise ValueError("TRUSTED_PROXY_HOPS must be an integer.") from None
+    if hops < 0 or hops > 5:
+        raise ValueError("TRUSTED_PROXY_HOPS must be between 0 and 5.")
+    return hops
 
 
 def get_config(config_name: str | None = None) -> dict[str, Any]:
@@ -189,6 +204,7 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
             "LOG_LEVEL": "WARNING",
             "SESSION_COOKIE_SECURE": False,
             "RATELIMIT_STORAGE_URI": "memory://",
+            "TRUSTED_PROXY_HOPS": 0,
             "AUTH_REGISTER_LIMIT": "5 per hour",
             "AUTH_LOGIN_LIMIT": "10 per hour",
         }
@@ -227,6 +243,7 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
         "LOG_LEVEL": log_level,
         "SESSION_COOKIE_SECURE": environment == "production",
         "RATELIMIT_STORAGE_URI": os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
+        "TRUSTED_PROXY_HOPS": _read_trusted_proxy_hops(),
         "AUTH_REGISTER_LIMIT": os.getenv("AUTH_REGISTER_LIMIT", "5 per hour"),
         "AUTH_LOGIN_LIMIT": os.getenv("AUTH_LOGIN_LIMIT", "10 per hour"),
         "CLAMD_HOST": os.getenv("CLAMD_HOST", "clamav"),
