@@ -41,7 +41,9 @@ Identity fields such as names and email addresses are stored as normal database
 values by the application; field-level encryption is not implemented here.
 
 Create `secrets/phi_encryption_keys` as a protected UTF-8 file containing a
-comma-separated Fernet key ring. For a new key, run:
+comma-separated Fernet key ring. Production startup fails closed when neither
+this file nor `PHI_ENCRYPTION_KEYS` is configured; the application never derives
+a production PHI key from `SECRET_KEY`. For a new key, run:
 
 ```powershell
 New-Item -ItemType Directory -Force secrets

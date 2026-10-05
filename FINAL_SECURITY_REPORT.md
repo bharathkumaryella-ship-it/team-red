@@ -56,6 +56,10 @@ with Docker and the chosen deployment platform. The local Docker drill was not
 completed because the Docker daemon returned a named-pipe permission error. No
 live deployment URL is claimed by this report.
 
+The application now fails closed in production when a dedicated
+`PHI_ENCRYPTION_KEYS` or `PHI_ENCRYPTION_KEYS_FILE` value is missing. Development
+and test environments retain their existing local behavior.
+
 ## 2026-10-06 implementation and review update
 
 The current source adds Fernet encryption for selected clinical/profile fields,

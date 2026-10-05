@@ -9960,3 +9960,33 @@ Actions Taken:
 * Ran a dedicated read-only security review.
 * Inspected current configuration, PHI encryption, Compose networking, deployment report, and git state.
 * Recorded verified strengths, residual risks, testing gaps, and prioritized remediation.
+
+================================================================================
+[2026-10-06T01:24:10+05:30] Enforce production PHI key separation
+================================================================================
+User Prompt (verbatim):
+1
+
+Agent Response:
+Implemented the selected Priority 0 remediation. Production configuration now fails closed unless a dedicated PHI_ENCRYPTION_KEYS or PHI_ENCRYPTION_KEYS_FILE value is provided; it no longer derives a PHI key from SECRET_KEY in production. Added regression coverage for missing dedicated keys, updated deployment/security documentation, and preserved development/test behavior.
+
+Agent Response Summary:
+The highest-priority application-controlled security gap was remediated with a narrow configuration change and a startup regression test. Focused health/configuration and security regression tests passed 14/14, and editor diagnostics reported no errors.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/backend/app/config.py (Modified)
+* src/backend/tests/test_health.py (Modified)
+* DEPLOYMENT.md (Modified)
+* DOCKER_SECURITY_CHECKLIST.md (Modified)
+* FINAL_SECURITY_REPORT.md (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added fail-closed production PHI key validation.
+* Added missing-key regression test.
+* Updated deployment and security checklist/report documentation.
+* Ran focused tests: 14 passed.
+* Ran static diagnostics: no errors.

@@ -1,8 +1,17 @@
 """Tests for the public health endpoint and API security baseline."""
 
+import base64
+
 import pytest
 from app import create_app
 from app.config import get_config
+
+
+def _set_production_phi_key(monkeypatch):
+    monkeypatch.setenv(
+        "PHI_ENCRYPTION_KEYS",
+        base64.urlsafe_b64encode(b"p" * 32).decode("ascii"),
+    )
 
 
 def test_health_returns_only_expected_service_status():
@@ -75,6 +84,7 @@ def test_production_config_disables_debug_and_requires_https_origins(monkeypatch
     monkeypatch.setenv("JWT_SECRET_KEY", "j" * 48)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", "https://clinic.example.com")
     monkeypatch.setenv("RATELIMIT_STORAGE_URI", "redis://redis:6379/0")
+    _set_production_phi_key(monkeypatch)
 
     app = create_app("production")
     config = app.config
@@ -101,6 +111,7 @@ def test_production_config_rejects_placeholder_secrets(monkeypatch):
     monkeypatch.setenv("SECRET_KEY", placeholder_secret)
     monkeypatch.setenv("JWT_SECRET_KEY", "j" * 48)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", "https://clinic.example.com")
+    _set_production_phi_key(monkeypatch)
 
     with pytest.raises(ValueError, match="SECRET_KEY"):
         create_app("production")
@@ -115,6 +126,23 @@ def test_production_config_rejects_process_local_rate_limits(monkeypatch):
     monkeypatch.setenv("JWT_SECRET_KEY", "j" * 48)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", "https://clinic.example.com")
     monkeypatch.setenv("RATELIMIT_STORAGE_URI", "memory://")
+    _set_production_phi_key(monkeypatch)
 
     with pytest.raises(ValueError, match="shared persistent storage"):
+        create_app("production")
+
+
+def test_production_config_requires_dedicated_phi_key(monkeypatch):
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "mysql+pymysql://user:password@localhost/test-db",
+    )
+    monkeypatch.setenv("SECRET_KEY", "s" * 48)
+    monkeypatch.setenv("JWT_SECRET_KEY", "j" * 48)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", "https://clinic.example.com")
+    monkeypatch.setenv("RATELIMIT_STORAGE_URI", "redis://redis:6379/0")
+    monkeypatch.delenv("PHI_ENCRYPTION_KEYS", raising=False)
+    monkeypatch.delenv("PHI_ENCRYPTION_KEYS_FILE", raising=False)
+
+    with pytest.raises(ValueError, match="dedicated PHI_ENCRYPTION_KEYS"):
         create_app("production")

@@ -31,6 +31,11 @@ def _phi_encryption_keys(environment: str) -> tuple[str, ...]:
         except OSError:
             raise ValueError("PHI_ENCRYPTION_KEYS_FILE could not be read.") from None
     if not raw_keys:
+        if environment == "production":
+            raise ValueError(
+                "Production requires a dedicated PHI_ENCRYPTION_KEYS or "
+                "PHI_ENCRYPTION_KEYS_FILE value."
+            )
         secret_seed = os.getenv("SECRET_KEY", "medidesk-dev-default-phi-fernet-key").encode("utf-8")
         fallback_key = base64.urlsafe_b64encode(hashlib.sha256(secret_seed).digest()).decode("ascii")
         return (fallback_key,)
