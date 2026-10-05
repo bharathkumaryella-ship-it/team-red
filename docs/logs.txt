@@ -717,3 +717,14 @@ Files Modified / Created:
 Actions Taken:
 * Checked repository status, configured origin, source layout, architecture notes, and Docker command availability.
 * Appended this turn and session-start entry to docs/logs.txt.
+================================================================================
+[2026-10-05T15:06:36+05:30] Commit reference for Docker CLI troubleshooting log
+================================================================================
+Commit SHA:
+59ba62eb3af85b62b6f117122a3e9d2dd90c37b6
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Recorded the commit containing this Docker CLI troubleshooting turn.
