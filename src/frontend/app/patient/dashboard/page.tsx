@@ -1,14 +1,11 @@
-import { getHealthStatus } from '@/lib/api';
+import Link from 'next/link';
 
 export default async function PatientDashboard() {
-  const health = await getHealthStatus();
-
   return (
     <div className="container page-shell">
       <section className="panel dashboard-panel">
         <p className="eyebrow">Patient portal</p>
         <h1>Patient dashboard</h1>
-        <p className="muted">Backend health: {health.status}</p>
         <div className="grid two-up">
           <article className="info-card">
             <h2>Upcoming visits</h2>
@@ -16,8 +13,10 @@ export default async function PatientDashboard() {
           </article>
           <article className="info-card">
             <h2>Profile</h2>
-            <p>Basic patient profile management will be added in the next phase.</p>
+            <p>Review and update your contact and demographic information.</p>
+            <Link href="/patient/profile">Manage profile</Link>
           </article>
+          <article className="info-card"><h2>Care team</h2><p>Browse active doctors and their professional information.</p><Link href="/patient/doctors">Find a doctor</Link></article>
         </div>
       </section>
     </div>

@@ -7,6 +7,7 @@ from functools import wraps
 from flask import g, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from sqlalchemy import select
 
 from app.models import User, UserRole
 from app.extensions import db
@@ -110,7 +111,11 @@ def get_current_user():
     if not user_id:
         return None
     try:
-        user = db.session.get(User, int(user_id))
+        user = db.session.execute(
+            select(User)
+            .where(User.id == int(user_id))
+            .execution_options(populate_existing=True)
+        ).scalar_one_or_none()
         return user if user and user.is_active else None
     except (ValueError, TypeError):
         return None
@@ -132,7 +137,7 @@ def require_authentication(f):
         user = get_current_user()
         if not user:
             logging.getLogger("auth").warning("Unauthenticated access attempt")
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify(error={"code": "UNAUTHORIZED", "message": "Authentication is required."}), 401
         return f(*args, **kwargs)
 
     return decorated_function
@@ -155,7 +160,7 @@ def require_role(*allowed_roles):
             user = get_current_user()
             if not user:
                 logging.getLogger("auth").warning("Unauthenticated role-protected access attempt")
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify(error={"code": "UNAUTHORIZED", "message": "Authentication is required."}), 401
             
             # Check if user role is in allowed roles
             normalized_roles = {
@@ -166,7 +171,7 @@ def require_role(*allowed_roles):
                 logging.getLogger("auth").warning(
                     "Authorization denied (user_id=%s, role=%s)", user.id, user.role.value
                 )
-                return jsonify({"error": "Forbidden"}), 403
+                return jsonify(error={"code": "FORBIDDEN", "message": "You are not authorized to perform this action."}), 403
             
             return f(*args, **kwargs)
 

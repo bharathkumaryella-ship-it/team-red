@@ -2476,3 +2476,1022 @@ Actions Taken:
 [2026-10-05T16:18:56+05:30] Phase 3 push synchronization follow-up
 ================================================================================
 Push attempt for `main` was rejected as non-fast-forward. A read-only fetch showed `origin/main` has two commits rooted in a separate history, with the repository files uploaded under a nested `BuildSecure/` directory and a different root README. There is no common ancestor with local `main` (29 local-only commits and 2 remote-only commits). No merge or force push was performed to avoid replacing the remote state. The local Phase 3 implementation remains committed as `ed4ab54`; log finalization is at `10b7e48`. User input is needed to decide how to reconcile the unrelated remote history before publishing these commits.
+================================================================================
+[2026-10-05T17:41:22+05:30] SESSION START
+================================================================================
+Agent: Codex
+Repo Root: C:\Users\bhara\BuildSecure
+Branch: main
+System Time: 2026-10-05T17:41:22+05:30
+Deadline: 2026-10-06T11:00:00+05:30
+
+================================================================================
+[2026-10-05T17:41:22+05:30] Phase 4: Patient and doctor management
+================================================================================
+User Prompt (verbatim):
+# Files pasted by the user:
+
+## "You are continuing development of the MediDesk Secure Clinic & Appointment Mana…": C:\Users\bhara\.codex/attachments/f482bffb-af10-4236-b9df-e26916581751/Pasted text.txt
+
+## My request:
+
+Pasted text (verbatim):
+You are continuing development of the MediDesk Secure Clinic & Appointment Management System.
+
+IMPORTANT:
+Phase 1 â€” Foundation
+Phase 2 â€” Database Models
+Phase 3 â€” Authentication + RBAC
+
+have already been completed.
+
+Do NOT reset the project.
+Do NOT remove working functionality.
+Do NOT recreate the database from scratch.
+Do NOT change the established technology stack.
+
+I am the sole developer responsible for frontend, backend, database, security, deployment, integration, and testing.
+
+This is PHASE 4 ONLY.
+
+==================================================
+PHASE 4 OBJECTIVE
+==================================================
+
+Implement the Patient Management and Doctor Management functionality.
+
+This phase must establish secure APIs and frontend interfaces for:
+
+PATIENT:
+- View own profile
+- Update own profile
+- View own basic account information
+
+DOCTOR:
+- View own doctor profile
+- Update allowed profile information
+- View available doctor information
+
+ADMIN:
+- View patients
+- View doctors
+- Manage doctor accounts/profiles
+- Manage patient accounts where appropriate
+
+The most important requirement is:
+
+EVERY API MUST ENFORCE BACKEND AUTHORIZATION.
+
+Do not rely on frontend visibility or hidden buttons for security.
+
+==================================================
+1. PATIENT PROFILE API
+==================================================
+
+Create protected endpoints for the authenticated patient.
+
+Suggested endpoints:
+
+GET /api/patients/me
+
+PUT/PATCH /api/patients/me
+
+The exact HTTP method can follow the existing project conventions.
+
+GET /api/patients/me:
+
+Return only the authenticated patient's information.
+
+Example:
+
+{
+  "id": 1,
+  "full_name": "Demo Patient",
+  "email": "patient@example.test",
+  "phone": "9999999999",
+  "date_of_birth": "2002-01-01",
+  "gender": "OTHER",
+  "blood_group": "O+",
+  "address": "Demo Address"
+}
+
+Do NOT return:
+
+password_hash
+authentication tokens
+internal secrets
+unnecessary database fields
+
+==================================================
+2. PATIENT OWNERSHIP RULE
+==================================================
+
+A patient must NEVER be able to retrieve another patient's private profile simply by changing an ID.
+
+Do NOT create insecure patterns such as:
+
+GET /api/patients/<id>
+
+where any authenticated patient can retrieve arbitrary patient data.
+
+If an endpoint requires an ID, enforce object-level authorization.
+
+For the "my profile" endpoint, derive the user identity from the authenticated session/token.
+
+NEVER trust:
+
+request body user_id
+
+query parameter user_id
+
+hidden frontend user_id
+
+URL user_id alone
+
+The authenticated identity must come from the backend authentication context.
+
+==================================================
+3. PATIENT PROFILE UPDATE
+==================================================
+
+Allow a patient to update only fields they are permitted to modify.
+
+Potential fields:
+
+full_name
+phone
+date_of_birth
+gender
+blood_group
+address
+
+Do NOT allow a patient to modify:
+
+id
+role
+email ownership unless a secure email-change workflow is implemented
+password_hash
+is_active
+created_at
+updated_at
+other security-sensitive fields
+
+Do not allow role escalation through profile updates.
+
+Reject malicious requests such as:
+
+{
+  "role": "ADMIN",
+  "is_active": true
+}
+
+The backend must ignore or reject protected fields.
+
+==================================================
+4. INPUT VALIDATION
+==================================================
+
+Validate every profile update.
+
+Check:
+
+- Data type
+- Length
+- Format
+- Allowed values
+- Required fields where applicable
+
+Examples:
+
+gender must use an approved set.
+
+blood_group must use an approved set if the application defines such a list.
+
+phone must follow a reasonable validation rule.
+
+address must have a reasonable maximum length.
+
+Do not accept unlimited input.
+
+Return safe validation errors.
+
+Do not expose database errors.
+
+==================================================
+5. DOCTOR PROFILE API
+==================================================
+
+Create endpoints for doctors.
+
+Suggested:
+
+GET /api/doctors/me
+
+PATCH /api/doctors/me
+
+The doctor must only be able to modify fields that are intended to be editable.
+
+Potential editable fields:
+
+specialization
+experience_years
+bio
+
+Do NOT allow a doctor to modify:
+
+user_id
+role
+license_number unless there is an explicit administrative workflow
+is_active
+password_hash
+created_at
+security-related fields
+
+==================================================
+6. DOCTOR DIRECTORY
+==================================================
+
+Create a protected/public doctor listing according to the application's intended UX.
+
+Suggested:
+
+GET /api/doctors
+
+The response should expose only information that patients need to select a doctor.
+
+For example:
+
+id
+name
+specialization
+experience_years
+bio
+
+Do NOT expose:
+
+password_hash
+email if not required
+phone if not required
+internal identifiers
+private account information
+security-related fields
+
+Support reasonable filtering such as:
+
+specialization
+
+Do not implement unrestricted arbitrary database filtering.
+
+Validate all query parameters.
+
+==================================================
+7. DOCTOR DETAIL
+==================================================
+
+If implementing:
+
+GET /api/doctors/<doctor_id>
+
+ensure that the endpoint only exposes safe public/professional doctor information.
+
+Validate doctor_id.
+
+Handle:
+
+invalid ID
+nonexistent doctor
+inactive doctor
+
+without exposing database internals.
+
+==================================================
+8. ADMIN PATIENT MANAGEMENT
+==================================================
+
+Implement protected admin-only endpoints.
+
+Suggested:
+
+GET /api/admin/patients
+
+GET /api/admin/patients/<patient_id>
+
+Admin must be authenticated and have ADMIN role.
+
+Do not expose password hashes or authentication secrets.
+
+Support safe pagination.
+
+Do not return unlimited records by default.
+
+Example:
+
+?page=1&limit=20
+
+Enforce reasonable maximum limits.
+
+==================================================
+9. ADMIN DOCTOR MANAGEMENT
+==================================================
+
+Implement protected admin-only doctor management.
+
+Suggested operations:
+
+GET /api/admin/doctors
+
+GET /api/admin/doctors/<doctor_id>
+
+POST /api/admin/doctors
+
+PATCH /api/admin/doctors/<doctor_id>
+
+PATCH /api/admin/doctors/<doctor_id>/status
+
+The exact endpoints can follow the existing architecture.
+
+When an admin creates a doctor:
+
+- Create User
+- Assign DOCTOR role on the server
+- Create DoctorProfile
+- Hash the initial password securely
+- Never store plaintext password
+- Validate specialization
+- Validate experience
+- Validate license number
+- Handle duplicate email/license number safely
+
+The client must NOT be able to create an ADMIN through the doctor creation endpoint.
+
+==================================================
+10. ADMIN PATIENT MANAGEMENT
+==================================================
+
+Allow admins to perform appropriate management operations.
+
+Possible operations:
+
+- View patient
+- Search patient
+- Deactivate/reactivate account if required
+
+Do NOT implement destructive deletion of patient records unless explicitly required.
+
+Because healthcare-related records may need historical integrity, prefer account deactivation over destructive deletion.
+
+Document this design decision.
+
+==================================================
+11. ACCOUNT STATUS
+==================================================
+
+Use the existing:
+
+is_active
+
+field.
+
+Inactive users:
+
+- Cannot log in
+- Cannot use protected APIs
+- Must receive safe errors
+
+An admin may change account status where authorized.
+
+Do not allow a normal patient or doctor to modify their own:
+
+is_active
+
+field.
+
+==================================================
+12. OBJECT-LEVEL AUTHORIZATION
+==================================================
+
+This phase MUST establish proper object-level authorization.
+
+Example:
+
+Patient A:
+
+user_id = 10
+
+Patient B:
+
+user_id = 20
+
+Patient A attempts:
+
+GET /api/patients/20
+
+The backend must reject the request.
+
+Expected:
+
+403 Forbidden
+
+or an appropriately safe response according to the API design.
+
+Do NOT rely on:
+
+- Frontend hiding
+- UI navigation
+- URL obscurity
+- Random IDs alone
+
+The backend must enforce ownership.
+
+==================================================
+13. DOCTOR AUTHORIZATION
+==================================================
+
+A doctor must not automatically receive access to all patient information.
+
+At this phase, create the authorization foundation.
+
+A doctor can access:
+
+- Their own doctor profile
+- Their own account
+
+Later, appointment-related authorization will determine which patients they can access.
+
+Do not give every doctor unrestricted patient access.
+
+==================================================
+14. ADMIN AUTHORIZATION
+==================================================
+
+Admin-only endpoints must enforce:
+
+authenticated user
++
+role == ADMIN
+
+Do not simply check:
+
+"admin" value supplied by frontend.
+
+The role must come from the authenticated backend identity.
+
+==================================================
+15. API RESPONSE DESIGN
+==================================================
+
+Use consistent response structures.
+
+Successful response example:
+
+{
+  "data": {
+    ...
+  }
+}
+
+Error:
+
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "You are not authorized to perform this action."
+  }
+}
+
+Do not leak:
+
+- SQL errors
+- stack traces
+- Python exceptions
+- database structure
+- password hashes
+- internal file paths
+
+==================================================
+16. PAGINATION
+==================================================
+
+Admin list endpoints should support pagination.
+
+Example:
+
+GET /api/admin/patients?page=1&limit=20
+
+Rules:
+
+- page must be a positive integer
+- limit must be positive
+- enforce a maximum limit
+- never allow unlimited database results
+- return pagination metadata
+
+Example:
+
+{
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "pages": 5
+  }
+}
+
+==================================================
+17. SEARCH
+==================================================
+
+For admin doctor/patient lists, implement safe search where useful.
+
+Example:
+
+GET /api/admin/patients?search=test
+
+Search should be implemented using SQLAlchemy safely.
+
+Do NOT construct SQL strings using user input.
+
+Use ORM filtering or parameterized queries.
+
+==================================================
+18. FRONTEND â€” PATIENT
+==================================================
+
+Implement:
+
+/patient/profile
+
+The patient should be able to:
+
+- View profile
+- Edit permitted profile fields
+- Save changes
+- Receive validation errors
+- Receive authorization errors
+
+Do not expose editable controls for protected fields.
+
+However, remember:
+
+Frontend restrictions are NOT security controls.
+
+The backend must enforce the restrictions.
+
+==================================================
+19. FRONTEND â€” DOCTOR
+==================================================
+
+Implement:
+
+/doctor/profile
+
+Doctor can:
+
+- View profile
+- Edit allowed profile fields
+- Save changes
+
+Do not allow role or account-status manipulation.
+
+==================================================
+20. FRONTEND â€” DOCTOR DIRECTORY
+==================================================
+
+Implement a patient-facing doctor directory.
+
+Example:
+
+/patient/doctors
+
+Display:
+
+- Doctor name
+- Specialization
+- Experience
+- Bio
+
+Provide basic search/filter functionality if practical.
+
+Keep the interface simple and professional.
+
+Do not implement appointment booking yet.
+
+==================================================
+21. FRONTEND â€” ADMIN
+==================================================
+
+Create:
+
+/admin/patients
+
+/admin/doctors
+
+The admin should be able to:
+
+- View paginated lists
+- Search
+- View details
+- Manage doctor accounts
+- Manage account status where authorized
+
+Do not build unnecessary complex dashboards yet.
+
+Focus on reliable functionality.
+
+==================================================
+22. SECURITY REQUIREMENTS
+==================================================
+
+Test all endpoints against:
+
+Authentication bypass
+Authorization bypass
+IDOR/BOLA
+Role tampering
+Mass assignment
+Parameter manipulation
+Invalid IDs
+Negative IDs
+Large pagination values
+Invalid search parameters
+Unexpected JSON fields
+Sensitive field modification
+Inactive account access
+
+==================================================
+23. MASS ASSIGNMENT PROTECTION
+==================================================
+
+This is extremely important.
+
+Do NOT blindly update models using:
+
+Model(**request.json)
+
+or:
+
+for key, value in request.json.items():
+    setattr(model, key, value)
+
+unless fields are explicitly allowlisted.
+
+Use explicit field allowlists.
+
+For example:
+
+Patient editable fields:
+
+full_name
+phone
+date_of_birth
+gender
+blood_group
+address
+
+Everything else must be rejected or ignored safely.
+
+==================================================
+24. SECURITY TESTS
+==================================================
+
+Create automated tests for:
+
+PATIENT:
+
+1. Patient can view own profile.
+2. Patient can update own profile.
+3. Patient cannot modify role.
+4. Patient cannot modify is_active.
+5. Patient cannot access another patient's private profile.
+6. Patient cannot access admin endpoints.
+
+DOCTOR:
+
+7. Doctor can view own profile.
+8. Doctor can update allowed profile fields.
+9. Doctor cannot modify role.
+10. Doctor cannot modify is_active.
+11. Doctor cannot access admin endpoints.
+12. Doctor does not receive unrestricted patient access.
+
+ADMIN:
+
+13. Admin can list patients.
+14. Admin can view patient details.
+15. Admin can list doctors.
+16. Admin can create doctor.
+17. Admin can update doctor.
+18. Admin can deactivate/reactivate account.
+19. Admin cannot accidentally create an ADMIN through doctor creation.
+
+SECURITY:
+
+20. Mass assignment attempt is rejected.
+21. Invalid IDs are handled safely.
+22. Pagination limits are enforced.
+23. Search input cannot cause SQL injection.
+24. Unauthorized requests return correct status.
+25. Inactive users cannot use protected APIs.
+
+==================================================
+25. SQL INJECTION TESTING
+==================================================
+
+For search/filter parameters, test safe malicious input such as:
+
+'
+"
+' OR '1'='1
+" OR "1"="1
+
+These tests are for validating defensive behavior.
+
+Do NOT perform destructive SQL injection.
+
+The application must remain intact.
+
+==================================================
+26. FRONTEND SECURITY
+==================================================
+
+Verify:
+
+- No password hashes displayed
+- No tokens displayed
+- No secrets in client-side source
+- No database credentials
+- Safe rendering of user-controlled text
+- Proper handling of 401/403
+- Proper logout behavior
+
+Do not dangerously inject arbitrary HTML.
+
+Avoid unsafe rendering mechanisms unless absolutely necessary.
+
+==================================================
+27. DATABASE INTEGRITY
+==================================================
+
+Preserve Phase 2 database relationships.
+
+Do not introduce duplicate User records when creating profiles.
+
+For a doctor:
+
+User
+  â†“
+DoctorProfile
+
+For a patient:
+
+User
+  â†“
+PatientProfile
+
+Maintain referential integrity.
+
+==================================================
+28. AUDIT LOGGING
+==================================================
+
+Add safe logs for important administrative actions:
+
+- Doctor created
+- Doctor updated
+- Account activated/deactivated
+- Admin accessed management endpoints
+- Authorization failure
+
+Do NOT log:
+
+- Passwords
+- Tokens
+- Medical record contents
+- Sensitive personal data unnecessarily
+
+==================================================
+29. DO NOT IMPLEMENT YET
+==================================================
+
+Do NOT implement:
+
+- Appointment booking
+- Appointment scheduling
+- Appointment cancellation
+- Appointment history
+- Medical records UI/API
+- Doctor patient access based on appointments
+- Notifications
+- AI
+- Payments
+
+These belong to later phases.
+
+==================================================
+30. PRESERVE PHASE 1â€“3
+==================================================
+
+After implementation verify:
+
+Phase 1:
+- Frontend starts
+- Backend starts
+- Docker works
+- Health endpoint works
+
+Phase 2:
+- MySQL works
+- Migrations work
+- Models work
+
+Phase 3:
+- Registration works
+- Login works
+- Logout works
+- /api/auth/me works
+- RBAC works
+- Rate limiting works
+- Authentication security remains intact
+
+Do not break existing functionality.
+
+==================================================
+31. VALIDATION
+==================================================
+
+After implementation:
+
+1. Run backend tests.
+2. Run frontend type checking.
+3. Run frontend linting if configured.
+4. Run database tests.
+5. Start Docker environment.
+6. Test patient profile.
+7. Test doctor profile.
+8. Test doctor directory.
+9. Test admin patient management.
+10. Test admin doctor management.
+11. Test object-level authorization.
+12. Test mass assignment protection.
+13. Test inactive accounts.
+14. Test pagination.
+15. Test SQL injection-resistant search.
+16. Inspect logs for sensitive information.
+
+Fix actual errors.
+
+Do not hide failing tests.
+
+==================================================
+32. DOCUMENTATION
+==================================================
+
+Update:
+
+README.md
+SECURITY.md
+
+Document:
+
+- Patient APIs
+- Doctor APIs
+- Admin APIs
+- Object-level authorization
+- Mass assignment protection
+- Pagination
+- Search security
+- Account deactivation
+- Security tests
+
+Clearly mark:
+
+IMPLEMENTED
+TESTED
+PLANNED
+
+==================================================
+33. FINAL RESPONSE
+==================================================
+
+After completing Phase 4, report:
+
+1. Patient APIs created
+2. Doctor APIs created
+3. Admin APIs created
+4. Frontend pages created
+5. Authorization rules
+6. Object-level authorization implementation
+7. Mass assignment protection
+8. Pagination implementation
+9. Search implementation
+10. Account status handling
+11. Security controls
+12. Tests created
+13. Tests executed
+14. Test results
+15. Docker verification
+16. Any unresolved issues
+17. Exact commands needed to run and test Phase 4
+
+STOP after Phase 4.
+
+Do not automatically continue to Phase 5.
+
+Agent Response:
+I’m implementing the requested Phase 4 patient and doctor management scope on the existing MediDesk foundation. I’ll add backend-protected patient and doctor profile APIs, a public doctor directory, admin-only paginated patient and doctor management, explicit update allowlists, safe status controls, and focused tests and frontend pages. I will preserve Phases 1–3 and stop before appointment, medical-record, notification, AI, or payment work.
+
+Agent Response Summary:
+Started Phase 4 after reviewing the existing project architecture, authentication helpers, database models, frontend routes, repository log, and the supplied detailed request. The remote GitHub branch still has an unrelated history from the previous turn; this work is proceeding in the local working tree without overwriting it.
+
+Commit SHA:
+(pending)
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Read AGENTS.md, docs/APPROACH.md, current logs, source tree, and the pasted Phase 4 specification
+* Confirmed onboarding/team agreement remains recorded
+* Began implementation planning
+
+================================================================================
+[2026-10-05T17:53:46+05:30] Continue Phase 4 implementation
+================================================================================
+User Prompt (verbatim):
+continue
+
+Agent Response:
+Continuing the active Phase 4 implementation. Backend authorization and management endpoints, frontend patient/doctor/admin pages, and focused security tests are in place. The first production build revealed that authenticated navigation hooks were placed in a server component; I moved that navigation into a client component, and the build now completes. I’m finishing documentation and final validation.
+
+Agent Response Summary:
+Resumed the same Phase 4 task after a brief interruption. No scope change was made; the remaining work is documentation, final checks, and local commit.
+
+Commit SHA:
+(pending)
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Continued Phase 4 backend and frontend implementation
+* Ran the optimized Next.js build successfully after fixing the client/server boundary
+
+================================================================================
+[2026-10-05T17:59:51+05:30] Phase 4 implementation complete
+================================================================================
+User Prompt (verbatim):
+The user requested continuation of the Phase 4 work described in C:\Users\bhara\.codex\attachments\f482bffb-af10-4236-b9df-e26916581751\Pasted text.txt, followed by the additional prompt continue. The full pasted specification and continuation are recorded above in this turn's start entries.
+
+Agent Response:
+Implemented Phase 4 only. Patient APIs provide authenticated /api/patients/me read/update with explicit editable fields and date, phone, gender, blood-group, and text validation. Doctor APIs provide authenticated /api/doctors/me read/update plus a patient-only directory and professional detail view that omits private contact/license/account fields. Admin APIs provide paginated/searchable patient and doctor lists, detail views, doctor create/update, and patient/doctor activation/deactivation. All management APIs enforce backend roles, use allowlisted request fields, cap pagination and search, use ORM query parameters, reject untrusted mutation Origins, and audit administrative/profile changes without credential or medical values. Account deactivation preserves records; destructive deletion and Phase 5 features were not added.
+
+Frontend pages now support patient and doctor self-service profiles, patient doctor search/details, admin patient and doctor lists/details, doctor account creation/editing, and account status management. Dashboards link to the new pages. Updated README.md, SECURITY.md, and docs/APPROACH.md with the Phase 4 scope and verification status. Fixed the authenticated user lookup to re-read account status from the database so accounts deactivated during an existing signed-cookie session are blocked.
+
+Verification completed: python -m pytest passed (95 tests, with four pre-existing SQLAlchemy deprecation warnings); 	sc --noEmit, 
+ext lint, and 
+ext build passed; git diff --check passed. The first Next.js build attempt exposed a client hook inside the server layout; navigation was moved into its own client component and the subsequent optimized build passed. Docker/MySQL and live browser end-to-end checks were unavailable. No schema changes were needed. The GitHub push remains blocked by the unrelated remote main history documented in the previous turn; no merge or force push was attempted.
+
+Agent Response Summary:
+Delivered patient, doctor, and admin profile-management APIs and frontend interfaces with backend role checks, explicit field allowlists, object ownership boundaries, safe pagination/search, status deactivation, and audit logging. Added comprehensive tests and refreshed architecture/security documentation. Verified the implementation locally and kept the work on local main because the configured remote branch is unrelated and cannot be safely fast-forwarded.
+
+Commit SHA:
+(pending Phase 4 implementation commit)
+
+Files Modified / Created:
+* README.md (Modified)
+* SECURITY.md (Modified)
+* docs/APPROACH.md (Modified)
+* docs/logs.txt (Modified)
+* src/backend/app/__init__.py (Modified)
+* src/backend/app/auth/utils.py (Modified)
+* src/backend/app/routes/__init__.py (Modified)
+* src/backend/app/routes/admin.py (Created)
+* src/backend/app/routes/doctors.py (Created)
+* src/backend/app/routes/patients.py (Created)
+* src/backend/app/services/management.py (Created)
+* src/backend/tests/test_management.py (Created)
+* src/frontend/app/admin/dashboard/page.tsx (Modified)
+* src/frontend/app/admin/doctors/page.tsx (Created)
+* src/frontend/app/admin/doctors/[doctorId]/page.tsx (Created)
+* src/frontend/app/admin/patients/page.tsx (Created)
+* src/frontend/app/admin/patients/[patientId]/page.tsx (Created)
+* src/frontend/app/doctor/dashboard/page.tsx (Modified)
+* src/frontend/app/doctor/profile/page.tsx (Created)
+* src/frontend/app/globals.css (Modified)
+* src/frontend/app/layout.tsx (Modified)
+* src/frontend/app/navigation.tsx (Created)
+* src/frontend/app/patient/dashboard/page.tsx (Modified)
+* src/frontend/app/patient/doctors/page.tsx (Created)
+* src/frontend/app/patient/doctors/[doctorId]/page.tsx (Created)
+* src/frontend/app/patient/profile/page.tsx (Created)
+* src/frontend/lib/api.ts (Modified)
+
+Actions Taken:
+* Read AGENTS.md, docs/APPROACH.md, current logs, source tree, team metadata status, and the complete Phase 4 attachment
+* Added patient self-profile, doctor self-profile/directory, admin patient/doctor management APIs, reusable validation/serialization helpers, and API-wide mutation Origin checks
+* Added patient/doctor/admin frontend routes, API client methods, client navigation, and dashboard links
+* Added Phase 4 tests for authorization, profile ownership, validation, mass assignment, doctor creation, account status, pagination, and search inputs
+* Updated README.md, SECURITY.md, and docs/APPROACH.md
+* Ran python -m pytest (95 passed), frontend TypeScript check (passed), Next lint (passed), Next optimized production build (passed), and git diff --check (passed)
+* Docker/MySQL validation was unavailable; did not merge or force-push over unrelated remote history

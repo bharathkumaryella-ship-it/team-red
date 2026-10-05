@@ -86,3 +86,7 @@ All 4 team members can work simultaneously across separate laptops:
 ## MediDesk Authentication (Phase 3)
 
 The current app provides patient registration and cookie-based login through the Flask API. See [SECURITY.md](SECURITY.md) for the implemented controls, configuration, and verification limits. Set `NEXT_PUBLIC_API_URL` for the frontend and configure Flask's `SECRET_KEY`, database settings, and `CORS_ALLOWED_ORIGINS`; use HTTPS and a shared limiter backend for production deployments.
+
+## Patient and Doctor Management (Phase 4)
+
+After signing in, patients can edit their own profile and browse active doctors. Doctors can edit permitted contact and professional information. Admins can search and page through patient and doctor accounts, create/update doctor profiles, and deactivate or reactivate accounts. Backend APIs enforce these permissions; frontend route guards are only a navigation aid. See [SECURITY.md](SECURITY.md) for endpoint scope and verification details.

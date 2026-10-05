@@ -32,3 +32,17 @@ The backend test suite covers registration, hash handling, login failures/status
 - Keep authorization and validation in the backend.
 - Use synthetic patient data in development and demos.
 - Configure HTTPS, a strong Flask secret, explicit frontend origins, and shared limiter storage before multi-worker deployment.
+
+## Patient and Doctor Management — IMPLEMENTED
+
+- `GET/PATCH /api/patients/me` is PATIENT-only and selects the profile by the authenticated account. Patients may update only `full_name`, `phone`, `date_of_birth`, `gender`, `blood_group`, and `address`; unsupported gender/blood-group values, future dates, malformed phone numbers, and oversized text are rejected. Email, role, `is_active`, IDs, hashes, and timestamps cannot be changed here.
+- `GET/PATCH /api/doctors/me` is DOCTOR-only and allows only name, phone, specialization, experience, and bio updates. License number and account status are admin-controlled.
+- Patient-only `GET /api/doctors` and `GET /api/doctors/<id>` show active doctors' name, specialization, experience, and bio. License, email, phone, and account status are omitted.
+- Admin-only `/api/admin/patients` and `/api/admin/doctors` support bounded pagination, search, and detail views. Admins can create/update doctor accounts and activate/deactivate patient or doctor accounts. Account deactivation preserves historical references; destructive deletion is not implemented.
+- Admin doctor creation always assigns `DOCTOR`, hashes the initial password, and creates one `User` plus one `DoctorProfile`. Unexpected fields such as `role` are rejected. Duplicate email or license conflicts return a safe 409.
+- Search uses SQLAlchemy ORM filters with bounded text; `limit` is capped at 100. Mutations with an untrusted Origin are rejected.
+- Patient/doctor account access is enforced in Flask. UI route guards are only a navigation aid. Appointment booking, medical-record APIs/UI, and unrestricted doctor access to patient records are out of scope.
+
+## Phase 4 Verification — TESTED
+
+Backend pytest suite: 95 passed. Frontend TypeScript check, Next lint, and optimized build passed. Docker/MySQL and live browser end-to-end testing were unavailable in this environment, so those remain unverified.

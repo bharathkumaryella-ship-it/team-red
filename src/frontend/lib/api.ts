@@ -35,6 +35,26 @@ export const authApi = {
   logout: () => authRequest<{ message: string }>('/logout', {}),
 };
 
+export async function apiRequest<T>(
+  path: string,
+  options: { method?: 'GET' | 'POST' | 'PUT' | 'PATCH'; body?: unknown } = {},
+): Promise<T> {
+  const method = options.method || 'GET';
+  const response = await fetch(`${apiBaseUrl}/api${path}`, {
+    method,
+    credentials: 'include',
+    headers: options.body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    cache: 'no-store',
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = result?.error?.message || result?.error || 'Request failed.';
+    throw new Error(typeof message === 'string' ? message : 'Request failed.');
+  }
+  return result as T;
+}
+
 export async function getHealthStatus() {
   const response = await fetch(`${apiBaseUrl}/api/health`, {
     cache: 'no-store',

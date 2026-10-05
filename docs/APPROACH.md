@@ -27,10 +27,10 @@ MediDesk is a secure digital clinic platform for patient, doctor, and admin work
 ## 2. Technical Architecture & Secure System Design
 
 ### 2.1 High-Level Architecture Overview
-This foundation phase creates a clean monorepo structure with separate frontend and backend concerns while keeping all application code in the repository's `src/` boundary. The frontend uses Next.js App Router placeholders for `/`, `/login`, `/register`, `/patient/dashboard`, `/doctor/dashboard`, and `/admin/dashboard`. The backend is a Flask application factory with environment-driven configuration, SQLAlchemy initialization, restricted CORS, JSON error handling, security headers, structured logging, and a public `/api/health` endpoint. MySQL credentials and secret values are not hardcoded; they are injected by environment variables.
+The application uses a Next.js frontend and a Flask API with SQLAlchemy and MySQL. Phase 4 adds patient and doctor profile management, a patient-facing doctor directory, and admin management endpoints. The Flask backend remains the authorization boundary; credentials and database settings come from environment configuration.
 
 ### 2.2 Data Flow & Component Interaction
-Requests travel from the browser through HTTPS to the Next.js frontend, then to the Flask REST API. The backend enforces the security boundary and role-based authorization policy. The frontend is not allowed to connect directly to MySQL, and the database is never exposed to browser code. The backend currently exposes a liveness endpoint only; no production patient or business operations are implemented yet.
+The browser sends credentialed requests to the Flask REST API, which checks the signed session, account status, and endpoint role before reading or changing records. Patient self-service routes address only the authenticated user's own profile. Admin routes use explicit allowlists and bounded pagination; doctor directory responses expose professional information only. The browser never connects directly to MySQL.
 
 ### 2.3 Technology Stack Rationale
 - Backend: Flask + SQLAlchemy with MySQL via PyMySQL for a simple, modular Python API foundation.
@@ -39,10 +39,10 @@ Requests travel from the browser through HTTPS to the Next.js frontend, then to 
 - Security posture: environment-driven configuration, CORS restrictions, security headers, and generic error responses before business logic is added.
 
 ### 2.4 Defense-in-Depth Security Controls
-1. Authentication & session security: deferred to later phases; a separate JWT secret key is reserved but not used yet.
-2. Authorization & access control: planned with role-based and object-level enforcement in later domain modules.
-3. Input validation & sanitization: request-size limits exist now; later phases will add strict schema validation and parameterized queries.
-4. Rate limiting & abuse prevention: deferred to a later hardening phase.
+1. Authentication & session security: Argon2id passwords and HttpOnly SameSite cookies; Secure cookies are enabled in production.
+2. Authorization & access control: patient, doctor, and admin management endpoints enforce backend roles; self-service endpoints use the authenticated identity.
+3. Input validation & mass assignment: field allowlists, bounded text/date/enum validation, safe ORM search, and capped pagination.
+4. Rate limiting & abuse prevention: configurable login and registration limits; management writes validate data and identity.
 5. Secrets & configuration hygiene: environment variables are required for secrets, database credentials, and CORS origins; production invalidates weak placeholder values.
 
 ### Phase 1 Decisions
@@ -59,8 +59,9 @@ Requests travel from the browser through HTTPS to the Next.js frontend, then to 
 |---|---|---|---|---|
 | **Phase 1: Foundation & Setup** | 0h – 4h | Project structure, backend factory, health endpoint, MySQL config, secure frontend placeholders | Secret scan, route validation, baseline checks | `Complete` |
 | **Phase 2: Core Domain & Models** | 4h – 12h | Database models, migrations, relationships, seed data, comprehensive tests | Model test suite (20/20 passing) | `Complete` |
-| **Phase 3: Security & Hardening** | 12h – 18h | Validation, abuse controls, logging, auth integrity | SAST & edge-case testing | `Planned` |
-| **Phase 4: Polish & Deployment** | 18h – 24h | UI polish, cloud deployment, final commit freeze | Live deployment check | `Planned` |
+| **Phase 3: Authentication & RBAC** | 12h - 18h | Sessions, registration/login, role helpers, rate limits | Auth and privilege tests | `Complete` |
+| **Phase 4: Patient & Doctor Management** | 18h - 22h | Self-service profiles, directory, admin account management | Ownership, role, mass-assignment, search, pagination tests | `Complete` |
+| **Phase 5: Deployment & Freeze** | 22h - 24h | Deployment verification and submission commit freeze | Live deployment check | `Planned` |
 
 ---
 
@@ -213,3 +214,22 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 ### 8.3 Phase 3 Verification
 - Added auth coverage for registration, duplicate and malformed requests, password hashing, login, inactive accounts, logout, `/me`, role checks, privilege tampering, and rate limiting.
 - Backend tests and TypeScript checks are recorded in the corresponding activity log entry. Docker/MySQL/browser end-to-end checks remain deployment-environment work and are not claimed as completed.
+
+## 9. Phase 4: Patient and Doctor Management (Completed)
+
+### 9.1 API Scope
+- `GET/PATCH /api/patients/me` returns and updates only the signed-in patient's own allowlisted fields. Email, role, account status, IDs, password hash, and timestamps are not writable.
+- `GET/PATCH /api/doctors/me` supports doctor-owned contact and professional profile fields. License number and account status are not doctor-editable.
+- Patient-only `GET /api/doctors` and `GET /api/doctors/<id>` expose active doctors' name, specialty, experience, and bio, without license or account contact details.
+- Admin-only `/api/admin/patients` and `/api/admin/doctors` provide search, bounded pagination, detail views, doctor creation/update, and status activation/deactivation. Records are not destructively deleted.
+
+### 9.2 Security Decisions
+- Role checks are enforced in Flask on every route. Self-service routes do not accept resource IDs, preventing IDOR across patient or doctor profiles.
+- All request keys are checked against explicit field allowlists. Admin doctor creation always assigns `DOCTOR`; `role` or `is_active` input is rejected. Doctor credentials are hashed with Argon2id.
+- Admin account state changes use `is_active` deactivation/reactivation to preserve healthcare history. Inactive accounts are rechecked against the database on each authenticated request.
+- Search uses SQLAlchemy bound parameters with bounded search text. Page must be positive and limit is 1-100; no user value is interpolated into raw SQL.
+- Mutation Origin checks apply across the API. Security events are audited with user IDs only; passwords, tokens, and medical data are not logged.
+
+### 9.3 Verification Status
+- Backend suite: 95 tests passed, including Phase 4 role, ownership, field allowlist, status, search, and pagination cases.
+- Frontend TypeScript, lint, and optimized production build passed. Docker/MySQL and live browser checks were unavailable in this environment; deployment behavior remains unverified.

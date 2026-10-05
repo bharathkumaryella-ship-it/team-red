@@ -1,22 +1,21 @@
-import { getHealthStatus } from '@/lib/api';
+import Link from 'next/link';
 
 export default async function AdminDashboard() {
-  const health = await getHealthStatus();
-
   return (
     <div className="container page-shell">
       <section className="panel dashboard-panel">
         <p className="eyebrow">Admin portal</p>
         <h1>Admin dashboard</h1>
-        <p className="muted">Backend health: {health.status}</p>
         <div className="grid two-up">
           <article className="info-card">
             <h2>Operations</h2>
-            <p>Platform administration will be implemented in a later phase with validation and audit controls.</p>
+            <p>Search patient accounts, review permitted profile details, and deactivate or reactivate accounts.</p>
+            <Link href="/admin/patients">Manage patients</Link>
           </article>
           <article className="info-card">
             <h2>Team oversight</h2>
-            <p>Patient, doctor, and appointment management controls will follow after the security model is ready.</p>
+            <p>Manage doctor profiles and account status. Appointment workflows remain out of scope.</p>
+            <Link href="/admin/doctors">Manage doctors</Link>
           </article>
         </div>
       </section>

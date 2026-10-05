@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from flask import Flask, session
+from flask import Flask, session, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
 
@@ -65,6 +65,17 @@ def create_app(
             from flask import g
 
             g.user_id = session.get("user_id")
+
+    @app.before_request
+    def enforce_trusted_mutation_origin():
+        """Block cross-origin browser writes to every cookie-authenticated API."""
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            origin = request.headers.get("Origin")
+            if origin and origin.rstrip("/") not in app.config["CORS_ALLOWED_ORIGINS"]:
+                return jsonify(error={
+                    "code": "ORIGIN_NOT_ALLOWED",
+                    "message": "The request origin is not allowed.",
+                }), 403
 
     with app.app_context():
         from app import models  # noqa: F401
