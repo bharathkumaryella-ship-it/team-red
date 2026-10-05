@@ -8104,6 +8104,33 @@ Actions Taken:
 * Confirmed that registration requires database infrastructure not started by `python run.py`.
 
 ================================================================================
+[2026-10-05T21:59:26+05:30] Fix frontend console issue
+================================================================================
+User Prompt (verbatim):
+<current_datetime>2026-10-05T21:59:26.461+05:30</current_datetime>
+
+fix all errors
+
+Agent Response:
+The observed `401 /api/auth/me` response is intentional and must not be removed: it is the server-side unauthenticated response used by the frontend to determine that no session exists. The missing `favicon.ico` request is a real frontend issue, so the frontend metadata now points to a new MediDesk favicon asset. The previously observed registration `500` remains an infrastructure/configuration issue when Flask is run without a working MySQL service; it cannot be safely fixed by hiding the error or changing authentication behavior.
+
+Agent Response Summary:
+Added a branded SVG favicon and registered it through Next.js metadata. Preserved the expected unauthenticated `401` behavior and documented that registration requires MySQL/database migrations or the full Docker Compose stack.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/frontend/app/layout.tsx (Modified)
+* src/frontend/public/favicon.svg (Created)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Inspected current frontend and backend error paths.
+* Verified both local ports 3000 and 5000 are listening.
+* Added favicon metadata and asset.
+
+================================================================================
 [2026-10-05T21:58:10+05:30] Explain expected authentication session checks
 ================================================================================
 User Prompt (verbatim):

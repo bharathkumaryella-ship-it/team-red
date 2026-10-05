@@ -8,6 +8,9 @@ import AppShell from './components/app-shell';
 export const metadata: Metadata = {
   title: 'MediDesk — Secure Healthcare Management',
   description: 'Secure clinic and appointment management platform with role-based access control and comprehensive healthcare workflows.',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
