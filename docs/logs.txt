@@ -8224,3 +8224,38 @@ Actions Taken:
 * Replayed registration with synthetic data.
 * Checked ports 3000, 5000, 3306, and 6379.
 * Checked Docker engine availability.
+
+================================================================================
+[2026-10-05T22:07:52+05:30] Confirm missing local infrastructure
+================================================================================
+User Prompt (verbatim):
+<current_datetime>2026-10-05T22:07:52.658+05:30</current_datetime>
+
+The cause is confirmed:
+- Flask API: running on `localhost:5000`
+- Next.js frontend: running on `localhost:3000`
+- MySQL: **not running on port 3306**
+- Redis: **not running on port 6379**
+- Docker Desktop Linux engine: **unavailable**
+
+Agent Response:
+Confirmed. No application code change is needed. Start Docker Desktop and wait for the Linux engine to become ready, then from `C:\Users\bhara\BuildSecure` run:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+Stop the manually started Flask and Next.js processes first to avoid port conflicts. Once the Compose services are healthy, retry registration at `http://localhost:3000/register`. If Docker cannot be started, MySQL 8 and Redis must be installed and running separately with matching backend environment variables.
+
+Agent Response Summary:
+Acknowledged the confirmed infrastructure cause and provided the next operational step. The codebase was left unchanged because the application is correctly reporting unavailable dependencies.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Recorded the user’s confirmation.
+* Preserved the existing application and deployment configuration.
