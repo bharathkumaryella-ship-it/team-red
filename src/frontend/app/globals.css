@@ -52,6 +52,9 @@ img {
   text-decoration: none;
 }
 
+.link-button { border: 0; background: transparent; color: #0d5ea8; font: inherit; cursor: pointer; }
+.form-error { color: #a32323; margin: 0; }
+
 .page-shell,
 .auth-shell {
   padding: 4rem 0;

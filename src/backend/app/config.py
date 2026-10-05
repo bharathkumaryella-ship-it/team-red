@@ -132,6 +132,10 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
             "CORS_ALLOWED_ORIGINS": ["http://localhost:3000"],
             "MAX_CONTENT_LENGTH": 1024 * 1024,
             "LOG_LEVEL": "WARNING",
+            "SESSION_COOKIE_SECURE": False,
+            "RATELIMIT_STORAGE_URI": "memory://",
+            "AUTH_REGISTER_LIMIT": "5 per hour",
+            "AUTH_LOGIN_LIMIT": "10 per hour",
         }
 
     is_development = environment == "development"
@@ -159,6 +163,10 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
         ),
         "MAX_CONTENT_LENGTH": _read_max_content_length(),
         "LOG_LEVEL": log_level,
+        "SESSION_COOKIE_SECURE": environment == "production",
+        "RATELIMIT_STORAGE_URI": os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
+        "AUTH_REGISTER_LIMIT": os.getenv("AUTH_REGISTER_LIMIT", "5 per hour"),
+        "AUTH_LOGIN_LIMIT": os.getenv("AUTH_LOGIN_LIMIT", "10 per hour"),
     }
 
 

@@ -1566,3 +1566,908 @@ Security Notes:
 * All database secrets remain environment-driven, not hardcoded
 
 Time Remaining: 19 hours 20 minutes
+================================================================================
+[2026-10-05T15:43:27+05:30] Phase 3: Authentication & Authorization (STARTING)
+================================================================================
+User Prompt (verbatim):
+[Phase 3 Complete Specification received - 658 lines]
+Requirements include:
+- Secure authentication with password hashing (Argon2id/bcrypt)
+- Patient registration (POST /api/auth/register)
+- Login (POST /api/auth/login)
+- Logout (POST /api/auth/logout)
+- Current user endpoint (GET /api/auth/me)
+- Role-Based Access Control (RBAC) with decorators
+- Rate limiting on auth endpoints
+- Secure HTTP-only cookies (no localStorage)
+- No token logging
+- No plaintext passwords
+- No role tampering allowed
+- No public admin/doctor registration
+- 20+ automated tests
+- Updated README.md and SECURITY.md
+- Full integration with existing Phase 1 & Phase 2
+
+Agent Response:
+Acknowledged Phase 3 requirements. Beginning implementation with:
+1. Install password hashing library (Argon2id via argon2-cffi)
+2. Implement User model password hashing
+3. Create auth blueprint with register/login/logout/me endpoints
+4. Implement rate limiting
+5. Create RBAC decorators
+6. Implement secure cookie-based session handling
+7. Create comprehensive test suite (20+ tests)
+8. Update documentation
+9. Test all functionality end-to-end
+10. Verify Phase 1 & 2 still working
+
+Preserving Phase 1 & 2 completely. No breaking changes.
+
+Agent Response Summary:
+Beginning Phase 3 implementation. Will create secure authentication layer with password hashing, role-based access control, rate limiting, and secure session management using HTTP-only cookies. All Phase 1 & 2 functionality preserved. Expected timeline: 4-6 hours for full implementation + verification.
+
+Commit SHA:
+(in progress)
+
+Files Modified / Created:
+(in progress - will update after implementation)
+
+Actions Taken:
+* Read Phase 3 specification in full
+* Logged turn entry
+* Preparing to implement auth blueprint
+
+Time Remaining: 19 hours 15 minutes
+================================================================================
+[2026-10-05T16:00:01+05:30] Complete Phase 3 authentication and authorization
+================================================================================
+User Prompt (verbatim):
+# Context from my IDE setup:
+
+## Active file: src/backend/app/auth/utils.py
+
+## Open tabs:
+- utils.py: src/backend/app/auth/utils.py
+
+# Files pasted by the user:
+
+## "You are continuing development of the MediDesk Secure Clinic & Appointment Mana…": C:\Users\bhara\.codex/attachments/846ec31d-4681-4be1-b5a8-6aa7e955f581/Pasted text.txt
+
+## My request:
+
+Pasted text (verbatim):
+You are continuing development of the MediDesk Secure Clinic & Appointment Management System.
+
+IMPORTANT:
+Phase 1 and Phase 2 have already been completed.
+
+Do NOT reset the project.
+Do NOT remove the existing architecture.
+Do NOT recreate the database from scratch.
+Do NOT replace working Phase 1 or Phase 2 functionality.
+
+I am the sole developer responsible for:
+
+- Next.js frontend
+- Flask backend
+- MySQL database
+- Security
+- Docker
+- Integration
+- Testing
+- Deployment
+
+This is PHASE 3 ONLY.
+
+The objective is to implement:
+
+1. Secure authentication
+2. Patient registration
+3. Controlled doctor/admin account creation
+4. Password hashing
+5. Login
+6. Logout/session handling
+7. Current-user endpoint
+8. Role-Based Access Control (RBAC)
+9. Authentication middleware/decorators
+10. Basic account security
+11. Authentication tests
+
+Do NOT implement appointments, medical records, or full patient/doctor/admin business APIs yet.
+
+==================================================
+1. SECURITY PRINCIPLE
+==================================================
+
+Treat every client request as untrusted.
+
+Never trust:
+
+- User ID supplied by the frontend
+- Role supplied by the frontend
+- Authorization information supplied by the frontend
+- Hidden frontend fields
+- URL parameters alone
+
+The backend must determine the authenticated user from the authentication mechanism.
+
+The backend must enforce authorization.
+
+Frontend route protection is NOT a security boundary.
+
+==================================================
+2. AUTHENTICATION STRATEGY
+==================================================
+
+Use a secure authentication mechanism appropriate for a Next.js + Flask architecture.
+
+Prefer secure HTTP-only cookies for authentication if the existing architecture supports it safely.
+
+Requirements:
+
+- Authentication credentials must not be stored in localStorage.
+- Do not expose authentication tokens to JavaScript unnecessarily.
+- Use Secure cookies in production.
+- Use HttpOnly cookies.
+- Configure SameSite appropriately.
+- Make cookie security configurable for local development vs production.
+- Never log authentication tokens.
+- Never return sensitive authentication credentials unnecessarily.
+
+If the project architecture already uses another secure mechanism, inspect it before changing it.
+
+Do not introduce two competing authentication mechanisms.
+
+==================================================
+3. PASSWORD SECURITY
+==================================================
+
+Never store plaintext passwords.
+
+Use a modern password hashing algorithm supported by the Python ecosystem, preferably Argon2id if compatible with the project.
+
+If Argon2id cannot be used because of an existing dependency constraint, use a strong adaptive password hashing mechanism such as bcrypt.
+
+Requirements:
+
+- Password hashing must use a unique salt.
+- Password verification must use the password hashing library.
+- Never implement custom password hashing.
+- Never use plain SHA-256/SHA-1/MD5 for password storage.
+- Never return password_hash in API responses.
+- Never log passwords.
+
+==================================================
+4. PATIENT REGISTRATION
+==================================================
+
+Create:
+
+POST /api/auth/register
+
+Patient registration must create:
+
+User
++
+PatientProfile
+
+The public registration endpoint must ALWAYS create a PATIENT.
+
+The client must NOT be able to choose:
+
+ADMIN
+DOCTOR
+
+through the registration request.
+
+For example, reject or ignore malicious input such as:
+
+{
+  "role": "ADMIN"
+}
+
+Do NOT trust a client-supplied role.
+
+The backend determines the role.
+
+==================================================
+5. REGISTRATION VALIDATION
+==================================================
+
+Validate:
+
+- Full name
+- Email
+- Phone
+- Password
+- Password confirmation if used
+
+Requirements:
+
+Email:
+- Normalize appropriately.
+- Validate format.
+- Store consistently.
+- Enforce uniqueness.
+
+Password:
+- Enforce a reasonable minimum length.
+- Reject obviously invalid values.
+- Do not impose unnecessarily complicated rules that harm usability.
+
+Phone:
+- Validate reasonable format/length.
+
+Full name:
+- Validate type.
+- Validate length.
+- Reject malformed input.
+
+Return clear but safe validation errors.
+
+Do not reveal unnecessary information.
+
+For example, avoid leaking internal database errors.
+
+==================================================
+6. DUPLICATE REGISTRATION
+==================================================
+
+If an email already exists, return a safe application-level error.
+
+Do not expose:
+
+- SQL errors
+- Stack traces
+- Database structure
+
+The database unique constraint remains the final integrity control.
+
+Handle race conditions safely.
+
+==================================================
+7. LOGIN
+==================================================
+
+Create:
+
+POST /api/auth/login
+
+Input:
+
+email
+password
+
+Process:
+
+1. Validate input.
+2. Find user.
+3. Verify password hash.
+4. Check account status.
+5. Establish authenticated session/token.
+6. Return a safe response.
+
+Do NOT return:
+
+- password_hash
+- password
+- secret key
+- database credentials
+- internal implementation details
+
+The response should contain safe user information such as:
+
+id
+full_name
+email
+role
+
+only when appropriate.
+
+==================================================
+8. LOGIN FAILURE SECURITY
+==================================================
+
+Do not reveal whether:
+
+- Email exists
+- Password exists
+- Account exists
+
+through overly specific authentication errors.
+
+Prefer a generic message such as:
+
+"Invalid email or password."
+
+Integrate rate limiting for login attempts.
+
+Do not implement account lockout that could easily become an account-enumeration or denial-of-service problem.
+
+Use a practical rate-limiting strategy.
+
+==================================================
+9. LOGOUT
+==================================================
+
+Create:
+
+POST /api/auth/logout
+
+Logout must invalidate/clear the authentication mechanism appropriately.
+
+If using secure cookies:
+
+- Clear the authentication cookie.
+- Ensure cookie attributes match the original authentication cookie.
+
+Do not simply redirect the frontend and assume the user is logged out.
+
+==================================================
+10. CURRENT USER
+==================================================
+
+Create:
+
+GET /api/auth/me
+
+It should return the currently authenticated user's safe information.
+
+Example:
+
+{
+  "id": 1,
+  "full_name": "Demo Patient",
+  "email": "patient@example.test",
+  "role": "PATIENT"
+}
+
+Never return:
+
+password_hash
+authentication secrets
+internal database information
+
+If the user is not authenticated:
+
+Return:
+
+401 Unauthorized
+
+==================================================
+11. RBAC
+==================================================
+
+Implement reusable backend authorization utilities.
+
+Support:
+
+PATIENT
+DOCTOR
+ADMIN
+
+Create a reusable mechanism such as:
+
+require_authentication
+require_role
+
+The exact implementation is up to the existing architecture.
+
+Example conceptual usage:
+
+@require_authentication
+@require_role("ADMIN")
+
+The implementation must be clean and reusable.
+
+==================================================
+12. ROLE RULES
+==================================================
+
+PATIENT:
+
+Allowed later:
+- Patient profile
+- Own appointments
+- Own medical information
+
+Not allowed:
+- Admin endpoints
+- Doctor administration
+- Other patients' private information
+
+DOCTOR:
+
+Allowed later:
+- Doctor dashboard
+- Own appointments
+- Authorized patient information
+- Authorized medical records
+
+Not allowed:
+- Admin management
+- Unrelated patient data
+
+ADMIN:
+
+Allowed:
+- Administrative management endpoints
+
+Do NOT assume ADMIN can access everything merely because of frontend visibility.
+
+Backend authorization must be enforced.
+
+==================================================
+13. ROLE ASSIGNMENT SECURITY
+==================================================
+
+This is critical.
+
+NEVER allow public users to register themselves as:
+
+ADMIN
+
+or:
+
+DOCTOR
+
+Patient registration must always produce:
+
+PATIENT
+
+Doctor accounts should be created through a controlled administrative/development mechanism.
+
+Admin accounts should be provisioned securely.
+
+Do not create a public:
+
+POST /register-admin
+
+endpoint.
+
+Do not create a public:
+
+POST /register-doctor
+
+endpoint.
+
+==================================================
+14. OBJECT-LEVEL AUTHORIZATION FOUNDATION
+==================================================
+
+Do not implement full appointment authorization yet.
+
+However, prepare reusable authorization utilities for later checks.
+
+The architecture must support checks such as:
+
+is_resource_owner(user, resource)
+
+and:
+
+is_authorized_doctor(user, patient/appointment)
+
+Do not implement fake authorization that simply returns True.
+
+If helper functions are created, make their intended usage and limitations clear.
+
+==================================================
+15. AUTHENTICATION ERROR RESPONSES
+==================================================
+
+Use consistent HTTP status codes.
+
+Examples:
+
+400
+Bad request / validation error
+
+401
+Unauthenticated
+
+403
+Authenticated but not authorized
+
+409
+Conflict such as duplicate email where appropriate
+
+429
+Rate limit exceeded
+
+Do not expose internal exception details.
+
+==================================================
+16. SECURITY HEADERS
+==================================================
+
+Verify the existing Phase 1 security headers.
+
+At minimum, prepare appropriate production headers such as:
+
+Content-Security-Policy
+X-Content-Type-Options
+Referrer-Policy
+Permissions-Policy
+Strict-Transport-Security
+
+IMPORTANT:
+
+Do not blindly add unsafe or broken CSP directives.
+
+If some headers depend on deployment configuration, document that clearly.
+
+Do not claim HTTPS/HSTS is effective in local HTTP development.
+
+==================================================
+17. CSRF CONSIDERATIONS
+==================================================
+
+Because authentication may use cookies, analyze CSRF protection carefully.
+
+Implement an appropriate CSRF defense for state-changing requests if required by the selected authentication architecture.
+
+Do not claim SameSite alone is a universal CSRF solution.
+
+Document:
+
+- Authentication cookie behavior
+- CSRF strategy
+- Production requirements
+
+==================================================
+18. CORS
+==================================================
+
+Preserve the secure CORS configuration from Phase 1.
+
+Do not use:
+
+Access-Control-Allow-Origin: *
+
+for authenticated production requests.
+
+Allow only configured frontend origins.
+
+If credentials/cookies are used, configure CORS correctly for credentials.
+
+Do not use wildcard origins with credentialed requests.
+
+==================================================
+19. RATE LIMITING
+==================================================
+
+Implement rate limiting for authentication endpoints.
+
+At minimum:
+
+POST /api/auth/login
+POST /api/auth/register
+
+Use reasonable limits suitable for a hackathon.
+
+Make limits configurable.
+
+Do not create extremely restrictive limits that make development difficult.
+
+Return:
+
+429 Too Many Requests
+
+when the limit is exceeded.
+
+==================================================
+20. ACCOUNT STATUS
+==================================================
+
+Use the existing is_active field.
+
+An inactive account must not be allowed to authenticate.
+
+Return a safe authentication error.
+
+Do not expose unnecessary account-state details.
+
+==================================================
+21. AUDIT LOGGING
+==================================================
+
+Add safe security logging for events such as:
+
+- Successful login
+- Failed login
+- Logout
+- Registration
+- Disabled account login attempt
+- Authorization failure
+
+Do NOT log:
+
+- Passwords
+- Tokens
+- Secret keys
+- Full sensitive medical information
+
+Keep logs useful for security analysis.
+
+==================================================
+22. FRONTEND AUTHENTICATION FOUNDATION
+==================================================
+
+Now connect the Next.js frontend to the authentication API.
+
+Implement only:
+
+/login
+/register
+
+and basic authenticated-user state.
+
+Create a clean API client/service layer.
+
+Do not duplicate authentication logic across pages.
+
+The frontend should:
+
+- Send credentials appropriately.
+- Handle 401 responses.
+- Handle validation errors.
+- Handle 429 responses.
+- Retrieve current user information.
+- Provide logout functionality.
+
+Do not store authentication tokens in localStorage.
+
+==================================================
+23. FRONTEND ROUTE PROTECTION
+==================================================
+
+Create basic route protection for:
+
+/patient/*
+/doctor/*
+/admin/*
+
+However:
+
+IMPORTANT:
+
+Frontend route protection is NOT a security control by itself.
+
+It is only a UX/navigation layer.
+
+The Flask backend remains responsible for real authorization.
+
+Do not hide this distinction in documentation.
+
+==================================================
+24. AUTHENTICATION TESTS
+==================================================
+
+Create automated tests for:
+
+1. Successful patient registration
+2. Invalid registration input
+3. Duplicate email
+4. Password hashing
+5. Password is never returned
+6. Successful login
+7. Wrong password
+8. Unknown account
+9. Inactive account
+10. Logout
+11. /api/auth/me without authentication
+12. /api/auth/me with authentication
+13. Patient role recognized
+14. Doctor role recognized
+15. Admin role recognized
+16. Patient cannot access admin-protected endpoint
+17. Doctor cannot access admin-protected endpoint
+18. Admin can access admin-protected endpoint
+19. Public registration cannot create admin
+20. Public registration cannot create doctor
+21. Rate limiting behavior
+
+Use test accounts and test configuration.
+
+Never run brute-force tests against the live production application.
+
+==================================================
+25. SECURITY TEST CASES
+==================================================
+
+Explicitly test attempts such as:
+
+Registration request:
+
+{
+  "email": "attacker@example.test",
+  "password": "StrongPassword123!",
+  "role": "ADMIN"
+}
+
+Expected:
+
+The resulting account must still be PATIENT.
+
+Test role tampering.
+
+Test missing authentication.
+
+Test invalid authentication.
+
+Test expired/invalid authentication if applicable.
+
+Test direct requests to protected endpoints.
+
+Test unauthorized role access.
+
+==================================================
+26. DO NOT IMPLEMENT YET
+==================================================
+
+Do NOT implement:
+
+- Appointment booking
+- Appointment APIs
+- Doctor patient APIs
+- Medical record APIs
+- Admin CRUD APIs
+- Full patient profile APIs
+- AI
+- Notifications
+- Payments
+
+Those belong to later phases.
+
+==================================================
+27. PRESERVE PREVIOUS PHASES
+==================================================
+
+After implementation verify:
+
+Phase 1:
+- Flask starts
+- Docker works
+- /api/health works
+- CORS works
+- Logging works
+
+Phase 2:
+- Database connection works
+- Migrations work
+- All models still exist
+- Relationships still work
+- Existing database tests still pass
+
+Do not break existing functionality.
+
+==================================================
+28. VALIDATION
+==================================================
+
+After implementation:
+
+1. Run backend tests.
+2. Run frontend tests/type checks if available.
+3. Start MySQL.
+4. Run migrations if required.
+5. Start Flask.
+6. Start Next.js.
+7. Test registration.
+8. Test login.
+9. Test logout.
+10. Test /api/auth/me.
+11. Test role authorization.
+12. Test rate limiting.
+13. Test Docker.
+14. Inspect logs for secrets.
+15. Verify no .env files are committed.
+16. Verify password hashes are stored rather than plaintext passwords.
+
+Fix actual errors.
+
+Do not suppress failing tests.
+
+==================================================
+29. DOCUMENTATION
+==================================================
+
+Update:
+
+README.md
+SECURITY.md
+
+Document:
+
+- Authentication architecture
+- Password hashing
+- Cookie/session strategy
+- RBAC
+- Role assignment
+- Rate limiting
+- CSRF strategy
+- CORS
+- Authentication error handling
+- Security logging
+- Testing performed
+
+Clearly mark:
+
+IMPLEMENTED
+TESTED
+PLANNED
+
+Do not claim security guarantees that have not been tested.
+
+==================================================
+30. FINAL RESPONSE
+==================================================
+
+After completing Phase 3, report:
+
+1. Authentication architecture
+2. Password hashing algorithm used
+3. Session/token mechanism
+4. Cookie security configuration
+5. Registration behavior
+6. Login behavior
+7. Logout behavior
+8. /api/auth/me behavior
+9. RBAC implementation
+10. Role assignment security
+11. Rate limiting configuration
+12. CSRF strategy
+13. CORS configuration
+14. Security headers
+15. Security logging
+16. Frontend authentication changes
+17. Tests created
+18. Tests executed
+19. Test results
+20. Docker verification
+21. Any unresolved issues
+
+STOP after Phase 3.
+
+Do not automatically continue to Phase 4.
+
+Agent Response:
+Completed the requested Phase 3 authentication foundation. The Flask API now supports patient-only registration with patient profiles, Argon2id password hashes, signed HttpOnly session cookies, login/logout/current-user endpoints, reusable authentication and role/ownership helpers, configurable login and registration limits, Origin checks for cookie-auth mutations, safe security-event logging, and security headers. The Next.js login and registration pages use a shared credentialed API layer, do not store tokens in localStorage, and apply client-side role routing for navigation. Development seed accounts now use Argon2id as well. Updated README.md, SECURITY.md, and docs/APPROACH.md to describe implemented behavior and its limits.
+
+Verification: python -m pytest passed (63 tests), src/frontend/.\node_modules\.bin\tsc.cmd --noEmit passed, and git diff --check passed. Docker verification was unavailable because Docker is not installed in this environment. No tracked .env files were found. Session cookies are client-side signed Flask sessions: logout clears the browser cookie, but a previously copied cookie remains valid until expiry; production multi-worker deployments need shared limiter storage. No Phase 4 work was started.
+
+Agent Response Summary:
+Implemented the requested authentication, authorization foundation, frontend auth flows, test coverage, and security documentation. Kept the role assignment decision on the backend, limited public signup to PATIENT, and recorded the current verification limits without claiming Docker or browser end-to-end validation.
+
+Commit SHA:
+(pending implementation commit)
+
+Files Modified / Created:
+* README.md (Modified)
+* SECURITY.md (Modified)
+* docs/APPROACH.md (Modified)
+* docs/logs.txt (Modified)
+* src/backend/app/__init__.py (Modified)
+* src/backend/app/auth/__init__.py (Created)
+* src/backend/app/auth/routes.py (Created)
+* src/backend/app/auth/utils.py (Created)
+* src/backend/app/config.py (Modified)
+* src/backend/app/middleware/security_headers.py (Modified)
+* src/backend/app/models/user.py (Modified)
+* src/backend/app/seeds.py (Modified)
+* src/backend/requirements.txt (Modified)
+* src/backend/tests/test_auth.py (Created)
+* src/frontend/app/auth-provider.tsx (Created)
+* src/frontend/app/globals.css (Modified)
+* src/frontend/app/layout.tsx (Modified)
+* src/frontend/app/login/page.tsx (Modified)
+* src/frontend/app/register/page.tsx (Modified)
+* src/frontend/lib/api.ts (Modified)
+
+Actions Taken:
+* Read the repository instructions, recent log entries, architecture notes, source files, and attached Phase 3 request
+* Implemented backend authentication routes, session settings, RBAC and ownership helpers, origin checks, and configurable rate limits
+* Connected the Next.js auth forms to the API and added client-side role route protection
+* Updated seed password hashing and security/architecture documentation
+* Ran python -m pytest (63 passed), TypeScript no-emit check (passed), git diff --check (passed), and checked tracked env paths (none)
+* Attempted Docker Compose config verification; Docker CLI was unavailable

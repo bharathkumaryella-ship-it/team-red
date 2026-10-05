@@ -196,3 +196,20 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 - Add fine-grained access control (patients see only own records, doctors see only their appointments)
 - Enhance logging with structured audit trails
 - Stress test with bulk data and concurrent appointments
+
+## 8. Phase 3: Authentication & Authorization Foundation (Completed)
+
+### 8.1 Authentication Design
+- Patient registration creates a `User` and one-to-one `PatientProfile`; the role is fixed server-side to `PATIENT`, regardless of request fields.
+- Argon2id hashes passwords with per-password salts. Login establishes a 24-hour Flask signed session cookie (HttpOnly, SameSite=Lax, Secure in production); logout clears it.
+- Rate limits are configurable through `AUTH_REGISTER_LIMIT`, `AUTH_LOGIN_LIMIT`, and `RATELIMIT_STORAGE_URI`. The in-memory backend is development-only for multi-worker scale.
+- CORS remains explicit-origin allowlisted with credentials. Cookie mutation requests with an Origin header are rejected unless that origin is configured. SameSite=Lax is an additional control; no synchronizer CSRF token is currently implemented.
+
+### 8.2 Authorization and Scope
+- Reusable backend helpers enforce authentication, roles, patient ownership, and doctor assignment. No domain endpoints or fake allow-all policy were added.
+- Frontend role route checks are UX only; all future protected data endpoints must use backend authorization.
+- Audit logs capture security events without passwords, tokens, or medical details. Security headers include a baseline CSP and production-only HSTS.
+
+### 8.3 Phase 3 Verification
+- Added auth coverage for registration, duplicate and malformed requests, password hashing, login, inactive accounts, logout, `/me`, role checks, privilege tampering, and rate limiting.
+- Backend tests and TypeScript checks are recorded in the corresponding activity log entry. Docker/MySQL/browser end-to-end checks remain deployment-environment work and are not claimed as completed.

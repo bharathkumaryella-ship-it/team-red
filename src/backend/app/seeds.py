@@ -1,7 +1,6 @@
 """Seed data for development and demonstration purposes."""
 
 from datetime import datetime, timedelta, date
-from werkzeug.security import generate_password_hash
 
 from app.extensions import db
 from app.models import (
@@ -25,12 +24,9 @@ def seed_development_data():
     User.query.delete()
     db.session.commit()
 
-    demo_password_hash = generate_password_hash("DEMO-ONLY-Password123!")
-
     patients = [
         User(
             email="patient1@demo.local",
-            password_hash=demo_password_hash,
             full_name="Alice Johnson",
             phone="555-0001",
             role=UserRole.PATIENT,
@@ -38,7 +34,6 @@ def seed_development_data():
         ),
         User(
             email="patient2@demo.local",
-            password_hash=demo_password_hash,
             full_name="Bob Smith",
             phone="555-0002",
             role=UserRole.PATIENT,
@@ -46,20 +41,20 @@ def seed_development_data():
         ),
         User(
             email="patient3@demo.local",
-            password_hash=demo_password_hash,
             full_name="Carol White",
             phone="555-0003",
             role=UserRole.PATIENT,
             is_active=True,
         ),
     ]
+    for user in patients:
+        user.set_password("DEMO-ONLY-Password123!")
     db.session.add_all(patients)
     db.session.flush()
 
     doctors = [
         User(
             email="doctor1@demo.local",
-            password_hash=demo_password_hash,
             full_name="Dr. Elizabeth Brown",
             phone="555-1001",
             role=UserRole.DOCTOR,
@@ -67,24 +62,25 @@ def seed_development_data():
         ),
         User(
             email="doctor2@demo.local",
-            password_hash=demo_password_hash,
             full_name="Dr. Michael Davis",
             phone="555-1002",
             role=UserRole.DOCTOR,
             is_active=True,
         ),
     ]
+    for user in doctors:
+        user.set_password("DEMO-ONLY-Password123!")
     db.session.add_all(doctors)
     db.session.flush()
 
     admin_user = User(
         email="admin@demo.local",
-        password_hash=demo_password_hash,
         full_name="Admin User",
         phone="555-9000",
         role=UserRole.ADMIN,
         is_active=True,
     )
+    admin_user.set_password("DEMO-ONLY-Password123!")
     db.session.add(admin_user)
     db.session.flush()
 

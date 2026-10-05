@@ -80,3 +80,9 @@ All 4 team members can work simultaneously across separate laptops:
 ---
 
 *Build freely. Use AI freely. Secure what you build. Document what you claim. Prove what you implemented.*
+
+---
+
+## MediDesk Authentication (Phase 3)
+
+The current app provides patient registration and cookie-based login through the Flask API. See [SECURITY.md](SECURITY.md) for the implemented controls, configuration, and verification limits. Set `NEXT_PUBLIC_API_URL` for the frontend and configure Flask's `SECRET_KEY`, database settings, and `CORS_ALLOWED_ORIGINS`; use HTTPS and a shared limiter backend for production deployments.

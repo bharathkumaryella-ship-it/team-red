@@ -3,7 +3,13 @@
 from datetime import datetime
 from enum import Enum
 
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError
+
 from app.extensions import db
+
+# Initialize Argon2id hasher
+_ph = PasswordHasher()
 
 
 class UserRole(str, Enum):
@@ -64,3 +70,35 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User id={self.id} email={self.email} role={self.role}>"
+
+    def set_password(self, password: str) -> None:
+        """Hash and store password using Argon2id.
+
+        Args:
+            password: Plaintext password to hash.
+
+        Raises:
+            ValueError: If password is empty or invalid.
+        """
+        if not password or not isinstance(password, str):
+            raise ValueError("Password must be a non-empty string")
+        if len(password) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        self.password_hash = _ph.hash(password)
+
+    def verify_password(self, password: str) -> bool:
+        """Verify plaintext password against stored hash using Argon2id.
+
+        Args:
+            password: Plaintext password to verify.
+
+        Returns:
+            bool: True if password matches, False otherwise.
+        """
+        if not password or not self.password_hash:
+            return False
+        try:
+            _ph.verify(self.password_hash, password)
+            return True
+        except (VerificationError, InvalidHashError):
+            return False
