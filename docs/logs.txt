@@ -709,7 +709,7 @@ Agent Response Summary:
 Explained that Docker is missing from the current shell PATH or not installed/running; Python venv activation does not provide the Docker CLI. Provided installation/restart and verification steps, then the corrected separate build/run commands. No application code changed.
 
 Commit SHA:
-Pending
+c80d409
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
