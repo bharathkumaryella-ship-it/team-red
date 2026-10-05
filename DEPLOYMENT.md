@@ -35,6 +35,11 @@ process-local rate-limit storage. Terminate TLS at a reverse proxy or hosting
 platform and forward `/api` to the backend on port 5000. Do not enable HSTS
 until HTTPS is actually active.
 
+Before processing real healthcare data, the deployment operator must enable
+encryption at rest for the database disks and all database/backups storage.
+Identity fields such as names and email addresses are stored as normal database
+values by the application; field-level encryption is not implemented here.
+
 Create `secrets/phi_encryption_keys` as a protected UTF-8 file containing a
 comma-separated Fernet key ring. For a new key, run:
 

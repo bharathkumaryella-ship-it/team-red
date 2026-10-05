@@ -9450,3 +9450,38 @@ Files Modified / Created:
 
 Actions Taken:
 * Recorded the final review request before inspecting or editing code.
+
+================================================================================
+[2026-10-06T01:11:17+05:30] Restore frontend nonce CSP and document at-rest encryption
+================================================================================
+User Prompt (verbatim):
+Still unresolved: names and emails remain plaintext in the database; encrypted disks and backups must be configured by the deployment operator. I also couldn’t run the drill: the Docker daemon returned a named-pipe permission error. No tests or builds were run.
+
+I noticed separate uncommitted frontend edits in your worktree: `src/frontend/middleware.ts` is deleted, and `layout.tsx` no longer forces dynamic rendering. Together these remove the frontend’s nonce CSP middleware. I left those edits untouched and out of my commit; review or restore the CSP before deployment.
+
+Implementation commit `3471cae` and log commit `29a4a18` are pushed to `main`. work on them and fix them . at last me project review
+
+Agent Response:
+Confirmed the reported CSP regression and restored `src/frontend/middleware.ts` with per-request nonce CSP generation and restored `dynamic = 'force-dynamic'` in the root layout. Documented that names and emails remain plaintext at the database layer and that disk/database/backup encryption at rest is an operator deployment requirement. The Docker drill remains unverified because the daemon is unavailable.
+
+Agent Response Summary:
+Frontend lint passed and the production build passed after clearing only the ignored `.next` artifact; the build reports existing React hook dependency warnings and a Windows Application Control warning for the optional SWC binary. The unrelated uncommitted backend auth change and `next-env.d.ts` edit were intentionally not staged or changed.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/frontend/middleware.ts (Restored)
+* src/frontend/app/layout.tsx (Modified)
+* FINAL_SECURITY_REPORT.md (Modified)
+* DEPLOYMENT.md (Modified)
+* DOCKER_SECURITY_CHECKLIST.md (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Inspected the reported pushed commits and worktree state.
+* Restored the nonce CSP middleware and dynamic rendering requirement.
+* Ran frontend lint successfully.
+* Cleared ignored `.next` output and ran frontend production build successfully.
+* Documented database-at-rest encryption as an operator responsibility.
+* Preserved unrelated uncommitted changes outside this fix.

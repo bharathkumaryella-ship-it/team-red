@@ -45,10 +45,16 @@ or destructive exploitation were used.
 
 ## Residual risks
 
+Names, email addresses, and other identity fields remain plaintext at the
+database layer. Encryption at rest for disks, database storage, and backups is
+an operator/deployment responsibility and must be enabled before handling real
+healthcare data. The application does not claim field-level encryption.
+
 Docker image builds, live browser workflows, MySQL persistence across a full
 down/up cycle, and TLS reverse-proxy behavior must be executed in an environment
-with Docker and the chosen deployment platform. No live deployment URL is
-claimed by this report.
+with Docker and the chosen deployment platform. The local Docker drill was not
+completed because the Docker daemon returned a named-pipe permission error. No
+live deployment URL is claimed by this report.
 
 ## 2026-10-06 implementation and review update
 

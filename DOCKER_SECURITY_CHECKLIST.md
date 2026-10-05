@@ -19,6 +19,7 @@
 | Security headers retained | PASS | Flask middleware retains CSP, HSTS in production, and related headers. |
 | CORS restricted | PASS | Explicit origins are required; wildcard origins are rejected. |
 | Logs avoid secrets | PASS | Existing audit/error logging excludes passwords, tokens, and clinical text. |
+| Database disks and backups encrypted | OPERATOR ACTION REQUIRED | Enable encryption at rest in the hosting platform and backup service before production healthcare data. |
 
 Docker image builds, scanner operation, and full browser flows require a running
 Docker Engine and were not claimed until executed in an environment with Docker
