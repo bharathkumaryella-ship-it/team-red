@@ -35,12 +35,20 @@ process-local rate-limit storage. Terminate TLS at a reverse proxy or hosting
 platform and forward `/api` to the backend on port 5000. Do not enable HSTS
 until HTTPS is actually active.
 
-Also set `PHI_ENCRYPTION_KEYS` to a comma-separated Fernet key ring. Generate a
-key with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
-and provide it through the deployment secret manager. Keep old keys available
-until every value encrypted by them has been re-encrypted; losing a required key
-makes the associated records and attachments unrecoverable. ClamAV must finish
-its first signature initialization before the backend becomes healthy.
+Create `secrets/phi_encryption_keys` as a protected UTF-8 file containing a
+comma-separated Fernet key ring. For a new key, run:
+
+```powershell
+New-Item -ItemType Directory -Force secrets
+python -c "import base64, os; from pathlib import Path; Path('secrets/phi_encryption_keys').write_bytes(base64.urlsafe_b64encode(os.urandom(32)))"
+```
+
+The Compose file mounts this file read-only at `/run/secrets/phi_encryption_keys`;
+it is excluded from Git. In production, inject the file through the platform's
+secret manager and restrict Docker-daemon access. Keep old keys available until
+every value encrypted by them has been re-encrypted; losing a required key makes
+the associated records and attachments unrecoverable. ClamAV must finish its
+first signature initialization before the backend becomes healthy.
 
 ## Database and migrations
 
@@ -53,9 +61,32 @@ volume.
 
 The PHI-encryption migration rewrites existing database values and attachment
 files in place. Before deploying a release that applies it, stop application
-writes, back up both the MySQL database and `attachment_data` volume, securely
-retain the matching encryption key with the backup, and verify that the backup
-can be restored. Do not start the new backend until these prerequisites are met.
+writes, back up both the MySQL database and `attachment_data` volume to
+encrypted storage, securely retain the matching key with the backup, and verify
+the restore in an isolated environment. Do not start the new backend until
+these prerequisites are met. Production database and attachment volumes must
+use provider or host-managed encryption at rest; Compose named volumes do not
+provide that encryption themselves.
+
+## Security verification drill
+
+Run this drill on an isolated deployment before production use; it has not been
+run by this repository review:
+
+1. Start the prior application version and create synthetic records and an
+   attachment. Back up the database, attachment volume, and matching key.
+2. Restore all three into isolated, network-restricted volumes. Confirm the
+   prior version can read the restored data.
+3. Apply the encryption migration in the isolated environment, then confirm
+   the new version can read those records and download the attachment. Confirm
+   the database and stored file bytes contain ciphertext rather than the
+   synthetic plaintext.
+4. Upload a harmless EICAR test file disguised with an allowed file signature
+   through the attachment API; confirm the scanner rejects it. Also stop the
+   isolated ClamAV service and confirm uploads fail closed with HTTP 503.
+5. Record the deployed image digests, migration revision, backup identifiers,
+   key version, scanner signature version, results, and restore duration. Do
+   not use production data or production volumes for this drill.
 
 ## Operations
 

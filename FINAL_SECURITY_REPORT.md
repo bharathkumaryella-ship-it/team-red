@@ -64,9 +64,17 @@ ordering, and search. Database/volume encryption, protected key custody, tested
 backup restoration, ClamAV operation, and TLS termination must be verified in
 the deployment environment. The Next.js package manifest and lockfile are
 aligned at 15.5.27; mutation Referer validation now compares the parsed origin,
-not a truncated path.
+not a truncated path. Compose mounts the PHI key ring from a read-only secret
+file. Failed logins for existing accounts generate cross-IP Redis threshold
+signals keyed by an HMAC fingerprint, without imposing an account lockout.
 
 This update was reviewed statically. No tests, frontend build, Docker build,
 scanner integration, or production migration was run for it. The validation
 evidence in the earlier report records the earlier snapshot and does not verify
 these additions.
+
+Failed login attempts also produce a cross-IP Redis signal keyed by a
+secret-derived account fingerprint. It does not enforce an account lockout;
+credential stuffing resistance still depends on per-IP limits, strong unique
+passwords, and adding multi-factor authentication. Centralized alerting for
+these signals must be configured by the operator.

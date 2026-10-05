@@ -60,7 +60,7 @@ services:
       FLASK_ENV: ${FLASK_ENV:-production}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
-      PHI_ENCRYPTION_KEYS: ${PHI_ENCRYPTION_KEYS:?PHI_ENCRYPTION_KEYS must be set}
+      PHI_ENCRYPTION_KEYS_FILE: /run/secrets/phi_encryption_keys
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE must be set}
@@ -84,6 +84,8 @@ services:
         condition: service_healthy
     volumes:
       - attachment_data:/app/instance/secure_attachments
+    secrets:
+      - phi_encryption_keys
     ports:
       - "${BACKEND_BIND_ADDRESS:-127.0.0.1}:5000:5000"
     healthcheck:
@@ -128,6 +130,10 @@ volumes:
   redis_data:
   clamav_data:
   attachment_data:
+
+secrets:
+  phi_encryption_keys:
+    file: ./secrets/phi_encryption_keys
 
 networks:
   frontend:

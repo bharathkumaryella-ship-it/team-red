@@ -100,7 +100,9 @@ now require a clean verdict from the private ClamAV service. Existing values
 are converted by an in-place Alembic migration. Names and email addresses
 remain plaintext for current login/search behavior. The deployment guide now
 requires a coordinated database and attachment-volume backup plus retention of
-the matching key before migration. The current Next.js manifest and lockfile
+the matching key before migration. Compose mounts the PHI key file as a
+read-only secret instead of exposing its value through the backend environment.
+The current Next.js manifest and lockfile
 are aligned at 15.5.27, and mutation Referer checks parse the origin separately
 from the path.
 
@@ -108,3 +110,8 @@ These post-audit changes were reviewed statically only. Their migration,
 ClamAV runtime behavior, production restore procedure, and frontend build were
 not re-verified as part of this update. Do not treat the historical test
 results above as verification of these changes.
+
+The backend also records account-aware failed-login thresholds in shared Redis
+using a keyed, truncated HMAC fingerprint. This is a monitoring signal only:
+it never blocks an account, so an attacker cannot use the counter to lock out
+its owner. Configure centralized log monitoring for the threshold events.

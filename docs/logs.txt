@@ -9373,3 +9373,46 @@ Files Modified / Created:
 * docs/logs.txt (Modified)
 Actions Taken:
 * Recorded the review-log commit SHA.
+
+================================================================================
+[2026-10-06T01:06:29+05:30] Implement credential monitoring and deployment safeguards
+================================================================================
+User Prompt (verbatim):
+- **Medium — distributed credential attacks:** Login throttling is keyed by remote IP ([auth/utils.py (line 18)](C:/Users/bhara/BuildSecure/src/backend/app/auth/utils.py:18)). Attack attempts spread across many IPs can evade it. Consider adding account-aware throttling that doesn’t let attackers lock out a victim.
+- **Medium — plaintext identity fields:** Names and email addresses remain searchable plaintext by design ([APPROACH.md (line 346)](C:/Users/bhara/BuildSecure/docs/APPROACH.md:346)). Protect database disks and backups, and keep this limitation clear in privacy claims.
+- **Medium — encryption key exposure:** Compose passes `PHI_ENCRYPTION_KEYS` as a container environment variable ([docker-compose.yml (line 63)](C:/Users/bhara/BuildSecure/docker-compose.yml:63)). Use deployment-managed secrets or a protected mounted secret, and restrict Docker-daemon access.
+- **Deployment readiness — unverified recovery and scanning:** The encryption migration rewrites data in place. The required backup and matching-key steps are documented in [DEPLOYMENT.md](C:/Users/bhara/BuildSecure/DEPLOYMENT.md), but restore, migration, and ClamAV operation still need to be exercised in the deployment environment.
+
+I found no clear high-impact authentication or object-authorization bypass in this static pass. Tests, builds, and deployment checks were not run. The review log is committed and pushed as `4747d7d`.
+
+12:56 AM  work on it
+
+Agent Response:
+Added cross-IP failed-login monitoring for known accounts using an HMAC fingerprint in Redis without blocking valid logins or creating account lockouts. Moved the PHI key ring out of the backend environment and into a read-only Compose secret file; the source file is ignored by Git. Updated deployment/security guidance for encrypted DB and backup storage and added an isolated backup/restore and ClamAV verification drill. The Docker daemon is installed but inaccessible from this environment, so no migration, restore, scanner, test, or build was run. The account signal is detection telemetry, not a hard account throttle; MFA/step-up verification is still required for preventive protection.
+
+Agent Response Summary:
+Implemented a no-lockout account failure signal and file-based PHI key loading for Compose, updated deployment and security docs, and clarified what remains unverified. Concurrent frontend edits were kept out of this commit; the current uncommitted removal of the CSP middleware is a separate security regression to review.
+
+Commit SHA:
+PENDING
+
+Files Modified / Created:
+* .env.example (Modified)
+* .gitignore (Modified)
+* DEPLOYMENT.md (Modified)
+* DOCKER_SECURITY_CHECKLIST.md (Modified)
+* FINAL_SECURITY_REPORT.md (Modified)
+* SECURITY.md (Modified)
+* SECURITY_AUDIT.md (Modified)
+* docker-compose.yml (Modified)
+* docs/APPROACH.md (Modified)
+* docs/logs.txt (Modified)
+* src/backend/app/auth/abuse.py (Created)
+* src/backend/app/auth/routes.py (Modified)
+* src/backend/app/config.py (Modified)
+
+Actions Taken:
+* Added HMAC-keyed, one-hour Redis failed-login counters and threshold logs for existing accounts only; no account-level login denial is enforced.
+* Added `PHI_ENCRYPTION_KEYS_FILE` config support and mounted the ignored host secret as a read-only Compose secret.
+* Documented encrypted volume/backup requirements and isolated migration/restore/EICAR/ClamAV drill.
+* Ran `git diff --check`; Docker daemon access failed with named-pipe permission denied. No tests/builds run.

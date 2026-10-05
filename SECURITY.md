@@ -32,6 +32,9 @@ The backend test suite covers registration, hash handling, login failures/status
 - Keep authorization and validation in the backend.
 - Use synthetic patient data in development and demos.
 - Configure HTTPS, a strong Flask secret, explicit frontend origins, and shared limiter storage before multi-worker deployment.
+- Compose mounts the PHI encryption key from the ignored `secrets/phi_encryption_keys` file. Protect its host permissions and Docker-daemon access; production should supply it from the platform secret manager.
+- Failed login counters use a keyed account fingerprint in shared Redis for cross-IP monitoring. They never block an account. Forward threshold warnings to an alerting system and add MFA before handling real patient data.
+- Names and email addresses remain plaintext for database search. Use encrypted database/storage volumes and encrypted backups; verify key-backed restores and the ClamAV rejection/fail-closed flow using the isolated drill in `DEPLOYMENT.md` before production use.
 
 ## Patient and Doctor Management — IMPLEMENTED
 

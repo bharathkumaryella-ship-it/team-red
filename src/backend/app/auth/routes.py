@@ -1,12 +1,14 @@
 """Authentication blueprint with register, login, logout, and me endpoints."""
 
 import logging
+from datetime import datetime, timedelta
 
 from flask import Blueprint, current_app, request, jsonify, session
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
 from app.models import User, UserRole, PatientProfile
+from app.auth.abuse import record_failed_account_login
 from app.auth.utils import (
     limiter,
     validate_email,
@@ -167,14 +169,31 @@ def login():
         # Find user by email
         user = User.query.filter_by(email=email).first()
 
+        # Check account lockout status
+        if user and user.locked_until and user.locked_until > datetime.utcnow():
+            auth_logger.warning("Login attempt on locked account (user_id=%s)", user.id)
+            return jsonify({"error": "Account is temporarily locked due to multiple failed login attempts. Please try again later."}), 429
+
         # Verify password and account status
         if not user or not user.verify_password(password):
+            if user:
+                record_failed_account_login(email)
+                user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
+                if user.failed_login_attempts >= 5:
+                    user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+                db.session.commit()
             auth_logger.warning("Failed login attempt")
             return jsonify({"error": "Invalid email or password"}), 401
 
         if not user.is_active:
             auth_logger.warning("Login attempt for inactive account (user_id=%s)", user.id)
             return jsonify({"error": "Invalid email or password"}), 401
+
+        # Reset failed attempts on successful login
+        if user.failed_login_attempts or user.locked_until:
+            user.failed_login_attempts = 0
+            user.locked_until = None
+            db.session.commit()
 
         # Establish session with bound token version
         session.clear()

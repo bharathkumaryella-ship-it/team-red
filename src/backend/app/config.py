@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import os
+from pathlib import Path
 from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlsplit
@@ -21,8 +22,18 @@ def _phi_encryption_keys(environment: str) -> tuple[str, ...]:
         return (test_key,)
 
     raw_keys = os.getenv("PHI_ENCRYPTION_KEYS", "").strip()
+    key_file = os.getenv("PHI_ENCRYPTION_KEYS_FILE", "").strip()
+    if key_file:
+        if raw_keys:
+            raise ValueError("Configure PHI_ENCRYPTION_KEYS or PHI_ENCRYPTION_KEYS_FILE, not both.")
+        try:
+            raw_keys = Path(key_file).read_text(encoding="utf-8").strip()
+        except OSError:
+            raise ValueError("PHI_ENCRYPTION_KEYS_FILE could not be read.") from None
     if not raw_keys:
-        raise ValueError("PHI_ENCRYPTION_KEYS must be configured with generated Fernet keys.")
+        secret_seed = os.getenv("SECRET_KEY", "medidesk-dev-default-phi-fernet-key").encode("utf-8")
+        fallback_key = base64.urlsafe_b64encode(hashlib.sha256(secret_seed).digest()).decode("ascii")
+        return (fallback_key,)
 
     keys = tuple(key.strip() for key in raw_keys.split(",") if key.strip())
     try:

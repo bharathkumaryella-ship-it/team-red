@@ -3,6 +3,7 @@
 .env.local
 **/.env
 **/.env.local
+/secrets/
 node_modules
 .next
 .pytest_cache
