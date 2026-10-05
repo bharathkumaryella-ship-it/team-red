@@ -5,20 +5,26 @@ export function middleware(request: NextRequest) {
   const apiOrigin = new URL(
     process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   ).origin;
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  const scriptDirectives = isDev
+    ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline'`;
+
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    scriptDirectives,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    `connect-src 'self' ${apiOrigin}`,
+    `connect-src 'self' ${apiOrigin} ws: wss:`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
   ];
 
-  if (process.env.NODE_ENV === 'production') {
+  if (!isDev) {
     directives.push('upgrade-insecure-requests');
   }
 

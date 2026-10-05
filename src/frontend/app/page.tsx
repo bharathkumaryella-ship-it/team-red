@@ -20,7 +20,7 @@ export default function HomePage() {
     }
   }, [loading, user, router]);
 
-  if (loading || user) return null;
+  if (!loading && user) return null;
 
   return (
     <div className="landing-page">
