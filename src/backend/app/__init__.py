@@ -7,6 +7,7 @@ from typing import Any
 
 from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
 
 from app.config import get_config, validate_config
 from app.extensions import db
@@ -30,6 +31,7 @@ def create_app(
     validate_config(app.config)
     configure_logging(app)
     db.init_app(app)
+    Migrate(app, db)
     CORS(
         app,
         resources={
@@ -46,4 +48,7 @@ def create_app(
     register_security_headers(app)
     register_routes(app)
 
+    with app.app_context():
+        from app import models  # noqa: F401
+    
     return app

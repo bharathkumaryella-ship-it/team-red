@@ -1,0 +1,27 @@
+"""Doctor profile model for doctor-specific information."""
+
+from datetime import datetime
+
+from app.extensions import db
+
+
+class DoctorProfile(db.Model):
+    """Profile information for a doctor user."""
+
+    __tablename__ = "doctor_profiles"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), unique=True, nullable=False, index=True)
+    specialization = db.Column(db.String(255), nullable=False, index=True)
+    license_number = db.Column(db.String(100), unique=True, nullable=False)
+    experience_years = db.Column(db.Integer, nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    user = db.relationship("User", back_populates="doctor_profile")
+
+    def __repr__(self):
+        return f"<DoctorProfile id={self.id} specialization={self.specialization} user_id={self.user_id}>"
