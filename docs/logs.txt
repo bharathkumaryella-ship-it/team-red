@@ -9416,3 +9416,12 @@ Actions Taken:
 * Added `PHI_ENCRYPTION_KEYS_FILE` config support and mounted the ignored host secret as a read-only Compose secret.
 * Documented encrypted volume/backup requirements and isolated migration/restore/EICAR/ClamAV drill.
 * Ran `git diff --check`; Docker daemon access failed with named-pipe permission denied. No tests/builds run.
+
+================================================================================
+[2026-10-06T01:06:29+05:30] Record credential and secret handling commit
+================================================================================
+The implementation and file list for the 01:06:29 turn are in commit 3471cae2d6171b155bddb5be1c3f058f4d861815.
+Files Modified / Created:
+* docs/logs.txt (Modified)
+Actions Taken:
+* Recorded the implementation commit SHA.
