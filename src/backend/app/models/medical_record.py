@@ -22,6 +22,10 @@ class MedicalRecord(db.Model):
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
+    # Nullable links preserve legacy records, while each linked appointment has
+    # at most one primary clinical record.
+    __table_args__ = (db.Index("uq_medical_records_appointment_id", "appointment_id", unique=True),)
+
     patient = db.relationship("User", foreign_keys=[patient_id], back_populates="medical_records_as_patient")
     doctor = db.relationship("User", foreign_keys=[doctor_id], back_populates="medical_records_as_doctor")
     appointment = db.relationship("Appointment", back_populates="medical_records")

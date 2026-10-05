@@ -255,3 +255,15 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 - `IMPLEMENTED`: Flask patient, doctor, and admin APIs; patient booking/list/detail/cancel screens; doctor schedule and actions; admin appointment filters and status management.
 - `TESTED`: automated backend cases exercise roles, ownership, validation, overlap, transitions, and filters. Record exact test output in `docs/logs.txt`.
 - `PLANNED / NOT VERIFIED HERE`: concurrent requests against MySQL/InnoDB, Docker end-to-end patient-to-doctor workflow, and real browser session testing.
+
+## 11. Phase 6: Secure Medical Records
+
+### 11.1 Ownership and Appointment Authority
+- A doctor creates a record only for a completed appointment assigned to that authenticated doctor. The appointment supplies both patient and doctor IDs; request-supplied identity fields are rejected. A unique nullable appointment index enforces one primary linked record, while legacy rows with no appointment link remain intact.
+- Patients list records by their session identity and can retrieve a record only when its patient ID matches. Doctors list and update records only when a linked appointment confirms both doctor and patient association. Legacy records without appointment links remain visible to their patient but are excluded from doctor access because there is no appointment authorization evidence. Unauthorized and absent record IDs both return 404.
+- No admin clinical-record API and no hard-delete operation are provided. Doctor edits are limited to diagnosis, notes, and prescription; relationship and ownership fields cannot be changed.
+
+### 11.2 Data Handling and Verification
+- Request fields and text types/lengths are allowlisted. APIs use SQLAlchemy queries, bounded pagination, minimal response fields, and audit events containing identifiers and action/outcome only. Clinical text is not logged. The UI renders record text through normal React interpolation, which escapes markup.
+- Migration `9c27f4d8a611` adds a unique index without rewriting or deleting existing rows. It intentionally fails if pre-existing linked duplicates violate the invariant; resolving such conflicts requires a data-owner decision.
+- Phase 6 automated tests cover role and object authorization, appointment completion/assignment, server-derived identities, duplicate links, validation/mass assignment, legacy record scope, no-delete behavior, and clinical-text-free auditing. Frontend and Docker verification are recorded in the per-turn log; SQLite does not verify MySQL concurrency or live browser behavior.
