@@ -1,0 +1,57 @@
+# Docker Compose for the MediDesk foundation stack
+services:
+  db:
+    image: mysql:8.0
+    container_name: medidesk-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: medidesk
+      MYSQL_USER: medidesk_app
+      MYSQL_PASSWORD: medidesk_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./src/backend
+    container_name: medidesk-backend
+    env_file:
+      - ./src/backend/.env
+    environment:
+      FLASK_ENV: development
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: medidesk
+      MYSQL_USER: medidesk_app
+      MYSQL_PASSWORD: medidesk_password
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./src/frontend
+    container_name: medidesk-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

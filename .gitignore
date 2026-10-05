@@ -1,0 +1,12 @@
+# Local repository ignore rules
+.env
+.env.local
+**/.env
+**/.env.local
+node_modules
+.next
+.pytest_cache
+.venv
+__pycache__
+*.pyc
+.DS_Store
