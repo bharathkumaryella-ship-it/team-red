@@ -6617,3 +6617,4 @@ Actions Taken:
 * Ran frontend lint and production build successfully; existing hook dependency warnings remain.
 * Attempted `docker compose build`; blocked by unavailable Docker Desktop Linux engine.
 * Checked tracked files for non-example environment secrets.
+Commit recorded for Phase 9: 2ec0adef4b4778f2f5ec72ef7313ecc98512596f
