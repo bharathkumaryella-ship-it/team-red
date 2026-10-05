@@ -9222,3 +9222,25 @@ Files Modified / Created:
 * docs/logs.txt (Modified)
 Actions Taken:
 * Recorded the implementation commit SHA.
+
+================================================================================
+[2026-10-06T00:45:00+05:30] Identify Markdown files for cleanup
+================================================================================
+User Prompt (verbatim):
+delete unwanted md files from project
+
+Agent Response:
+I inventoried the project Markdown files. Core files include AGENTS.md, README.md, PARTICIPANT_RULES.md, docs/APPROACH.md, deployment/README.md, and src/backend/README.md. Other files include deployment and architecture guides, a Docker checklist, demo instructions, and overlapping security notes/audit reports. I have not deleted any Markdown because none is clearly disposable without your choice of scope.
+
+Agent Response Summary:
+Reviewed project Markdown files and identified core repository documents and potential cleanup groups. No Markdown files were deleted pending your selection of what counts as unwanted.
+
+Commit SHA:
+PENDING
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Listed project Markdown paths while excluding dependency directories.
+* Compared overlapping deployment and security documents.
