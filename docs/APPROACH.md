@@ -26,25 +26,31 @@
 ## 2. Technical Architecture & Secure System Design
 
 ### 2.1 High-Level Architecture Overview
-*Describe the multi-tier system structure (Client / API Gateway / Domain Services / Data Persistence).*
+Phase 1 establishes a modular Flask API in `src/backend/`, keeping application code inside the starter repository's required source boundary. A Next.js client will call JSON routes under `/api`; route modules will delegate future business behavior to services, with request schemas, middleware, utilities, and models kept in separate packages. Flask-SQLAlchemy is initialized against MySQL using environment-based configuration, but Phase 1 creates no business tables or migrations. The factory separates development, testing, and production settings so later domain modules do not require restructuring.
 
 ### 2.2 Data Flow & Component Interaction
-*Outline how requests traverse the system from ingress to storage and back, highlighting trust boundaries.*
+Requests enter the Flask application factory, pass through configured CORS and security-header handling, then reach a route. The health endpoint returns static service metadata and does not query the database. Future database-backed routes will use SQLAlchemy through the shared extension; no patient information or credentials are returned by infrastructure endpoints.
 
 ### 2.3 Technology Stack Rationale
 *Explain the tools selected and why alternatives were rejected:*
-- **Backend / API Framework:** (e.g., FastAPI, Express, Go Gin) — *Why chosen:*
-- **Frontend / Client:** (e.g., React, Next.js, HTML/JS) — *Why chosen:*
-- **Database & Persistence:** (e.g., PostgreSQL, SQLite, Redis) — *Why chosen:*
+- **Backend / API Framework:** Flask application factory — small modular foundation for the requested Python API.
+- **Frontend / Client:** Next.js — planned frontend; Phase 1 configures a restricted, environment-driven CORS origin.
+- **Database & Persistence:** MySQL with Flask-SQLAlchemy and PyMySQL — configured now without creating business tables; testing uses in-memory SQLite and does not require a MySQL service.
 - **Authentication & Cryptography:** (e.g., Bcrypt/Argon2, PyJWT) — *Why chosen:*
 
 ### 2.4 Defense-in-Depth Security Controls
 *Detail the specific security controls implemented:*
-1. **Authentication & Session Security:** (e.g., salted password hashing, short-lived signed tokens)
-2. **Authorization & Access Control:** (e.g., role-based access control, object-level permission checks)
-3. **Input Validation & Sanitization:** (e.g., strict schema validation, query parameterization to prevent SQLi)
-4. **Rate Limiting & Abuse Prevention:** (e.g., IP/token bucket throttling on public endpoints)
-5. **Secrets & Configuration Hygiene:** (e.g., zero hardcoded credentials, 100% environment variable isolation)
+1. **Authentication & Session Security:** Not implemented in Phase 1; secret configuration reserves a separate JWT key for a later controlled phase.
+2. **Authorization & Access Control:** No business routes exist yet; authorization will be designed with the future authenticated modules.
+3. **Input Validation & Sanitization:** Request bodies are capped by a configurable maximum size; future schemas and parameterized SQLAlchemy operations belong in their respective modules.
+4. **Rate Limiting & Abuse Prevention:** Deferred; Phase 1 applies a request-size limit and does not introduce a rate-limiting dependency.
+5. **Secrets & Configuration Hygiene:** Credentials and secret keys are read from environment variables; `.env` is ignored by Git and excluded from the Docker build context. Production validates configured secrets and HTTPS CORS origins.
+
+### Phase 1 Backend Decisions
+- `DATABASE_URL`, when set, takes precedence over the `MYSQL_*` fields; both configure the same MySQL SQLAlchemy extension.
+- `/api/health` is an application liveness check only and intentionally does not disclose or test database connectivity.
+- Production runs under Gunicorn as a non-root container user. Flask's built-in development server is limited to local development.
+- API exceptions use generic JSON errors; logs contain structured event metadata and exception class names, not request bodies, credentials, exception messages, or tracebacks.
 
 ---
 
