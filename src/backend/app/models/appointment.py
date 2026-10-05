@@ -57,16 +57,15 @@ class Appointment(db.Model):
         notes: str | None = None,
         **kwargs,
     ):
-        super().__init__(
-            patient_id=patient_id,
-            doctor_id=doctor_id,
-            start_at=start_at,
-            end_at=end_at,
-            status=status,
-            reason=reason,
-            notes=notes,
-            **kwargs,
-        )
+        self.patient_id = patient_id
+        self.doctor_id = doctor_id
+        self.start_at = start_at
+        self.end_at = end_at
+        self.status = status
+        self.reason = reason
+        self.notes = notes
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __repr__(self):
         return f"<Appointment id={self.id} patient_id={self.patient_id} doctor_id={self.doctor_id} status={self.status}>"

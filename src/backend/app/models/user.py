@@ -78,15 +78,14 @@ class User(db.Model):
         is_active: bool = True,
         **kwargs,
     ):
-        super().__init__(
-            email=email,
-            password_hash=password_hash,
-            full_name=full_name,
-            phone=phone,
-            role=role,
-            is_active=is_active,
-            **kwargs,
-        )
+        self.email = email
+        self.password_hash = password_hash
+        self.full_name = full_name
+        self.phone = phone
+        self.role = role
+        self.is_active = is_active
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __repr__(self):
         return f"<User id={self.id} email={self.email} role={self.role}>"

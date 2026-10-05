@@ -40,15 +40,14 @@ class MedicalRecord(db.Model):
         prescription: str | None = None,
         **kwargs,
     ):
-        super().__init__(
-            patient_id=patient_id,
-            doctor_id=doctor_id,
-            appointment_id=appointment_id,
-            diagnosis=diagnosis,
-            notes=notes,
-            prescription=prescription,
-            **kwargs,
-        )
+        self.patient_id = patient_id
+        self.doctor_id = doctor_id
+        self.appointment_id = appointment_id
+        self.diagnosis = diagnosis
+        self.notes = notes
+        self.prescription = prescription
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __repr__(self):
         return f"<MedicalRecord id={self.id} patient_id={self.patient_id} doctor_id={self.doctor_id}>"

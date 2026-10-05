@@ -8810,3 +8810,32 @@ Actions Taken:
 * Ran `npx pyright src/backend` confirming 0 errors, 0 warnings, 0 informations.
 * Ran full test suite verifying 144 passed tests in 31.6s.
 * Ran `next build` verifying clean production build.
+
+================================================================================
+[2026-10-05T23:46:56+05:30] Refactored model __init__ to direct attribute assignment avoiding super kwargs
+================================================================================
+User Prompt (verbatim):
+still there errors
+
+Agent Response:
+Identified that `super().__init__(patient_id=patient_id, ...)` in `medical_record.py` (line 44) and sibling models (`appointment.py`, `doctor_profile.py`, `patient_profile.py`, `user.py`) triggered editor warnings because the static base class `object.__init__` does not accept keyword arguments. Refactored all model constructors to assign attributes directly (`self.patient_id = patient_id`) and unpack remaining attributes via `setattr(self, k, v)` without calling `super().__init__(...)` with keyword arguments. Ran Pyright verifying 0 errors and ran full pytest suite verifying 144 tests passed in 30.45s.
+
+Agent Response Summary:
+Replaced `super().__init__(**kwargs)` in all database models with direct property assignments, eliminating the static analyzer warning on line 44 of `medical_record.py` and across models. Verified 0 Pyright diagnostics and all 144 unit and security tests pass.
+
+Commit SHA:
+15dbf74
+
+Files Modified / Created:
+* src/backend/app/models/medical_record.py (Modified)
+* src/backend/app/models/appointment.py (Modified)
+* src/backend/app/models/doctor_profile.py (Modified)
+* src/backend/app/models/patient_profile.py (Modified)
+* src/backend/app/models/user.py (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Refactored `MedicalRecord.__init__` to assign `self.patient_id`, `self.doctor_id`, etc. directly.
+* Refactored `Appointment.__init__`, `DoctorProfile.__init__`, `PatientProfile.__init__`, and `User.__init__`.
+* Ran `pyright` verification with 0 errors.
+* Ran `pytest` with 144 passed tests.

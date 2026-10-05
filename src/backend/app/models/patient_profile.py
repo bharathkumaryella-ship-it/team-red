@@ -32,14 +32,13 @@ class PatientProfile(db.Model):
         address: str | None = None,
         **kwargs,
     ):
-        super().__init__(
-            user_id=user_id,
-            date_of_birth=date_of_birth,
-            gender=gender,
-            blood_group=blood_group,
-            address=address,
-            **kwargs,
-        )
+        self.user_id = user_id
+        self.date_of_birth = date_of_birth
+        self.gender = gender
+        self.blood_group = blood_group
+        self.address = address
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __repr__(self):
         return f"<PatientProfile id={self.id} user_id={self.user_id}>"

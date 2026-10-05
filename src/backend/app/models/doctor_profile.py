@@ -32,14 +32,13 @@ class DoctorProfile(db.Model):
         bio: str | None = None,
         **kwargs,
     ):
-        super().__init__(
-            user_id=user_id,
-            specialization=specialization,
-            license_number=license_number,
-            experience_years=experience_years,
-            bio=bio,
-            **kwargs,
-        )
+        self.user_id = user_id
+        self.specialization = specialization
+        self.license_number = license_number
+        self.experience_years = experience_years
+        self.bio = bio
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __repr__(self):
         return f"<DoctorProfile id={self.id} specialization={self.specialization} user_id={self.user_id}>"
