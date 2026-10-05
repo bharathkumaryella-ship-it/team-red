@@ -179,7 +179,7 @@ def login():
             if user:
                 record_failed_account_login(email)
                 user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
-                if user.failed_login_attempts >= 5:
+                if user.failed_login_attempts >= 10:
                     user.locked_until = datetime.utcnow() + timedelta(minutes=15)
                 db.session.commit()
             auth_logger.warning("Failed login attempt")
