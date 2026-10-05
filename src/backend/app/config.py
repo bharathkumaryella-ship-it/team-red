@@ -116,7 +116,8 @@ def _parse_origins(raw_origins: str, *, development: bool) -> list[str]:
 
 def _read_max_content_length() -> int:
     try:
-        max_content_length = int(os.getenv("MAX_CONTENT_LENGTH", "1048576"))
+        # Bound every request while allowing a 5 MiB attachment plus multipart framing.
+        max_content_length = int(os.getenv("MAX_CONTENT_LENGTH", str(6 * 1024 * 1024)))
     except ValueError:
         raise ValueError("MAX_CONTENT_LENGTH must be an integer.") from None
     if max_content_length < 1:
@@ -141,7 +142,7 @@ def get_config(config_name: str | None = None) -> dict[str, Any]:
             "SQLALCHEMY_TRACK_MODIFICATIONS": False,
             "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": True},
             "CORS_ALLOWED_ORIGINS": ["http://localhost:3000"],
-            "MAX_CONTENT_LENGTH": 1024 * 1024,
+            "MAX_CONTENT_LENGTH": 6 * 1024 * 1024,
             "LOG_LEVEL": "WARNING",
             "SESSION_COOKIE_SECURE": False,
             "RATELIMIT_STORAGE_URI": "memory://",

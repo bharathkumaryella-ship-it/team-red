@@ -123,25 +123,37 @@ def upload_attachment(record_id: int):
     storage_filename = f"{uuid.uuid4().hex}{ext}"
     storage_dir = _get_storage_dir()
     destination = storage_dir / storage_filename
+    file_created = False
 
-    # Write file securely with restricted permissions
-    with open(destination, "wb") as f:
-        f.write(content)
+    try:
+        # Exclusive creation prevents overwriting any pre-existing path.
+        with open(destination, "xb") as f:
+            file_created = True
+            f.write(content)
+        os.chmod(destination, 0o600)
 
-    # Compute SHA-256 for audit and integrity
-    sha256_hash = hashlib.sha256(content).hexdigest()
-
-    attachment = MedicalAttachment(
-        record_id=record.id,
-        uploader_id=current_user.id,
-        original_filename=safe_name,
-        storage_filename=storage_filename,
-        mime_type=expected_mime,
-        file_size=len(content),
-        sha256_hash=sha256_hash,
-    )
-    db.session.add(attachment)
-    db.session.commit()
+        attachment = MedicalAttachment(
+            record_id=record.id,
+            uploader_id=current_user.id,
+            original_filename=safe_name,
+            storage_filename=storage_filename,
+            mime_type=expected_mime,
+            file_size=len(content),
+            sha256_hash=hashlib.sha256(content).hexdigest(),
+        )
+        db.session.add(attachment)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        if file_created:
+            destination.unlink(missing_ok=True)
+        logger.error(
+            "Attachment upload persistence failed (record_id=%s uploader_id=%s exception_type=%s)",
+            record.id,
+            current_user.id,
+            type(exc).__name__,
+        )
+        return jsonify({"error": "The attachment could not be saved"}), 500
 
     logger.info(
         "Attachment successfully uploaded (attachment_id=%s, record_id=%s, uploader_id=%s)",

@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Per-request CSP nonces require dynamic rendering so Next can nonce its scripts.
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">

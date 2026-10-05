@@ -322,3 +322,16 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 
 - `JURY_DEMO.md` defines a synthetic Patient, Doctor, and Admin walkthrough plus safe denial cases for authentication, RBAC, IDOR, rate limiting, origin checks, validation, and security headers.
 - Docker image and full browser/persistence tests remain pending until a Docker Desktop Linux engine is available. No live deployment URL is claimed.
+
+## 10. Phase 9: Security hardening decisions (2026-10-06)
+
+- Removed per-account failed-login lockout from the login path. A shared IP-based limiter remains the abuse control; account lockouts let an attacker deny service to a known account. Production must use the configured shared persistent limiter store.
+- Raised the bounded total request body default to 6 MiB to permit the existing 5 MiB attachment cap plus multipart framing. Keep the route-level 5 MiB file cap as the authoritative payload limit.
+- Attachment files are created exclusively with owner-only permissions. If metadata persistence fails, roll back the database transaction and remove the file created by that request.
+- Added browser security headers to Next.js responses. A strict nonce-based CSP remains a follow-up because per-request nonces require dynamic rendering and must be applied in a way that does not break the current pages.
+- A patched Next.js upgrade was attempted but npm registry access did not complete in this environment; the existing dependency pin and lockfile remain unchanged and need an upgrade before public deployment.
+- Follow-up: the package installation completed after the note above was written. Next.js and `eslint-config-next` are now pinned by `package-lock.json` to 15.5.27. Frontend middleware adds a per-request nonce CSP and the root layout opts into dynamic rendering so framework scripts can receive the nonce. This changes pages from static to dynamic rendering; verify the production build and browser behavior before release.
+
+## 14. Security Hardening Implementation Addendum (2026-10-06)
+
+The phase 9 note above records intermediate status during implementation. The completed change upgrades Next.js and eslint-config-next to 15.5.27 with exact manifest and lockfile pins; adds request-scoped nonce CSP middleware and dynamic rendering; adds frontend security headers; removes account-wide lockout to prevent account-targeted denial of service while retaining IP-based shared throttling; and aligns the total request limit to 6 MiB around the existing 5 MiB attachment cap. Attachment writes now use exclusive creation and mode 0600, with database rollback and removal of only the file created by the current request on failure. A production frontend build and browser CSP validation have not been run.
