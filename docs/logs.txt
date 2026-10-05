@@ -8480,7 +8480,7 @@ Agent Response Summary:
 Diagnosed the DISM Error 740 as a missing elevation issue and provided steps to execute WSL and virtualization setup via an Administrator PowerShell prompt followed by a system reboot. Also offered local direct execution commands for the Flask and Next.js services so development can proceed without waiting on Docker.
 
 Commit SHA:
-7c6f015
+4acde24
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
@@ -8488,3 +8488,74 @@ Files Modified / Created:
 Actions Taken:
 * Analyzed DISM elevation failure (Error 740) and Docker engine 500 error.
 * Provided elevated command instructions, reboot requirement, and non-Docker local run options.
+
+================================================================================
+[2026-10-05T22:52:31+05:30] Resolving PowerShell ExecutionPolicy restriction for npm
+================================================================================
+User Prompt (verbatim):
+PS C:\Users\bhara\BuildSecure> cd c:\Users\bhara\BuildSecure\src\frontend
+>> npm install
+>> npm run dev
+>> 
+npm : File C:\Program Files\nodejs\npm.ps1 cannot be loaded because running scripts is disabled on 
+this system. For more information, see about_Execution_Policies at 
+https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:2 char:1
++ npm install
++ ~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+npm : File C:\Program Files\nodejs\npm.ps1 cannot be loaded because running scripts is disabled on    
+this system. For more information, see about_Execution_Policies at
+https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:3 char:1
++ npm run dev
++ ~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+PS C:\Users\bhara\BuildSecure\src\frontend> npm install
+npm : File C:\Program Files\nodejs\npm.ps1 cannot be loaded because running scripts is disabled on 
+this system. For more information, see about_Execution_Policies at
+https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:1 char:1
++ npm install
++ ~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAcce
+
+Agent Response:
+The error occurs because Windows PowerShell blocks running .ps1 script files under the default Restricted execution policy, which intercepts Node's npm.ps1 wrapper script.
+
+To resolve this, you can choose any of the following solutions:
+
+Option 1 (Fastest, zero configuration):
+Use npm.cmd instead of npm:
+npm.cmd install
+npm.cmd run dev
+
+Option 2 (Permanent fix for your user account without requiring Administrator):
+Run:
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+Then run:
+npm install
+npm run dev
+
+Option 3 (Applies to current PowerShell window only):
+Run:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+Then run:
+npm install
+npm run dev
+
+Agent Response Summary:
+Diagnosed the PSSecurityException blocking npm.ps1 due to PowerShell's default script execution policy. Provided immediate solutions including calling npm.cmd directly and adjusting ExecutionPolicy to RemoteSigned for the current user or process.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Analyzed PowerShell ExecutionPolicy error on npm.ps1.
+* Provided npm.cmd fallback and Set-ExecutionPolicy commands.
