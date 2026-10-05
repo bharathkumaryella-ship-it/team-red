@@ -14,7 +14,7 @@ or destructive exploitation were used.
 | FINDING-001 | Medium | Compose defaulted to development mode, which could disable production cookie and configuration safeguards. | Compose now defaults to `FLASK_ENV=production`; local development requires the explicit `docker-compose.dev.yml` override. |
 | FINDING-002 | Medium | The API was published on all host interfaces over plaintext HTTP. | Compose now binds port 5000 to `127.0.0.1` by default. Production ingress should use a TLS reverse proxy on the same host. |
 | FINDING-003 | Medium | Production PHI encryption previously allowed key derivation from `SECRET_KEY`. | Production now fails closed unless `PHI_ENCRYPTION_KEYS` or `PHI_ENCRYPTION_KEYS_FILE` is configured. |
-| FINDING-004 | High | The locked frontend dependency tree contains 7 reported vulnerabilities (1 moderate, 6 high). | No forced upgrade was applied because npm reports that remediation requires breaking Next.js/ESLint upgrades; upgrade and regression-test the frontend dependency tree before public exposure. |
+| FINDING-004 | High | The locked frontend dependency tree contains 5 reported high vulnerabilities after a compatible PostCSS override. | No forced upgrade was applied because npm reports that remaining remediation requires a breaking Next.js/ESLint upgrade; upgrade and regression-test the frontend dependency tree before public exposure. |
 
 ## Verified controls
 
@@ -43,9 +43,17 @@ or destructive exploitation were used.
 - Docker Compose syntax/configuration: passed with synthetic variables.
 - Docker backend and frontend image builds: passed after correcting the
   backend migration configuration path.
-- `npm audit --audit-level=high`: 7 vulnerabilities reported; forced
-  remediation was intentionally not applied because it requires breaking
-  upgrades.
+- Trusted proxy configuration: implemented with bounded
+  `TRUSTED_PROXY_HOPS`; Compose defaults to `0` and deployments must set the
+  exact trusted hop count.
+- `npm audit --audit-level=high`: 5 high vulnerabilities remain in the
+  `braces`/Next ESLint dependency path after updating PostCSS to 8.5.29;
+  forced remediation was intentionally not applied because it requires
+  breaking upgrades.
+- Isolated Docker runtime drill: MySQL, Redis, ClamAV, backend, and frontend
+  started successfully on alternate local ports; API and frontend returned
+  HTTP 200, Redis returned `PONG`, and ClamAV returned `PONG`. The drill used
+  synthetic credentials and fresh disposable volumes, then removed them.
 - Python dependency audit, SBOM generation, and image scanning were not run
   because `pip-audit`, `syft`, `trivy`, and `grype` are not installed.
 - Tracked secret check: no non-example environment files were found.

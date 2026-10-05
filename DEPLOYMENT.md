@@ -35,6 +35,15 @@ process-local rate-limit storage. Terminate TLS at a reverse proxy or hosting
 platform and forward `/api` to the backend on port 5000. Do not enable HSTS
 until HTTPS is actually active.
 
+`BACKEND_BIND_ADDRESS` defaults to `127.0.0.1` and `BACKEND_HOST_PORT` defaults
+to `5000`. Change the host port only when another local process occupies 5000;
+the container port remains 5000 and production ingress should still keep the
+backend private.
+
+`FRONTEND_BIND_ADDRESS` defaults to `0.0.0.0` and `FRONTEND_HOST_PORT` defaults
+to `3000`; change the host port for local drills when another process occupies
+3000.
+
 Before processing real healthcare data, the deployment operator must enable
 encryption at rest for the database disks and all database/backups storage.
 Identity fields such as names and email addresses are stored as normal database

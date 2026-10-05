@@ -12,14 +12,15 @@ are not represented as successful deployment evidence.
 | Frontend lint | PASS WITH WARNINGS | Existing React Hook dependency warnings |
 | Frontend production build | PASS WITH WARNINGS | Existing hook warnings and Windows SWC Application Control warning |
 | Compose configuration | PASS | Production Compose rendered with synthetic variables |
+| Trusted proxy configuration | PASS CONFIGURATION | Bounded `TRUSTED_PROXY_HOPS` is implemented; live ingress behavior remains deployment-specific |
 | Docker image build | PASS | Backend and frontend images built successfully |
-| Docker runtime health checks | PENDING | Full stack was not started; ignored runtime PHI secret file is not present |
+| Docker runtime health checks | PASS | Disposable fresh-volume drill: MySQL, Redis, ClamAV, backend, and frontend started; API/frontend HTTP 200, Redis/ClamAV PONG |
 | Browser security tests | PENDING | No browser test harness is configured |
 | MySQL/Redis/ClamAV integration | PENDING | Requires a running Compose stack |
 | Backup/restore drill | PENDING | Requires isolated deployment storage |
 | HTTPS/TLS ingress | PENDING | No live ingress or deployment URL was provided |
 | Trusted proxy behavior | PENDING | Requires the selected reverse proxy or managed ingress |
-| npm dependency audit | FINDINGS | 7 vulnerabilities: 1 moderate and 6 high; automatic fix requires breaking upgrades |
+| npm dependency audit | FINDINGS | 5 high vulnerabilities remain in the braces/Next ESLint path; PostCSS was updated to 8.5.29, while automatic remaining fixes require breaking upgrades |
 | Python dependency audit | NOT RUN | `pip-audit` is not installed |
 | SBOM generation | NOT RUN | `syft` is not installed |
 | Container image scan | NOT RUN | `trivy` and `grype` are not installed |

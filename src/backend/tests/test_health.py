@@ -132,6 +132,16 @@ def test_production_config_rejects_process_local_rate_limits(monkeypatch):
         create_app("production")
 
 
+def test_trusted_proxy_hops_are_explicit_and_bounded(monkeypatch):
+    monkeypatch.setenv("TRUSTED_PROXY_HOPS", "2")
+    config = get_config("development")
+    assert config["TRUSTED_PROXY_HOPS"] == 2
+
+    monkeypatch.setenv("TRUSTED_PROXY_HOPS", "6")
+    with pytest.raises(ValueError, match="between 0 and 5"):
+        get_config("development")
+
+
 def test_production_config_requires_dedicated_phi_key(monkeypatch):
     monkeypatch.setenv(
         "DATABASE_URL",

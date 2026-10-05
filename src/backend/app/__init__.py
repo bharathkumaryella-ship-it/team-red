@@ -10,6 +10,7 @@ from flask import Flask, session, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
 from sqlalchemy import inspect
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config import get_config, validate_config
 from app.extensions import db
@@ -55,6 +56,13 @@ def create_app(
         app.config.from_mapping(config_overrides)
 
     validate_config(app.config)
+    if app.config["TRUSTED_PROXY_HOPS"]:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=app.config["TRUSTED_PROXY_HOPS"],
+            x_proto=app.config["TRUSTED_PROXY_HOPS"],
+            x_host=app.config["TRUSTED_PROXY_HOPS"],
+        )
     configure_logging(app)
     db.init_app(app)
     Migrate(app, db)

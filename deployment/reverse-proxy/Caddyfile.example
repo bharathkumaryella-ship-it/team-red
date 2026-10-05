@@ -1,0 +1,22 @@
+# Reviewed HTTPS ingress template.
+# Copy to Caddyfile and replace the hostname before deployment.
+clinic.example.com {
+    encode gzip
+
+    # Keep API traffic on the private Docker network.
+    handle /api/* {
+        reverse_proxy backend:5000
+    }
+
+    # The frontend is the public application service.
+    handle {
+        reverse_proxy frontend:3000
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        X-Frame-Options "DENY"
+    }
+}

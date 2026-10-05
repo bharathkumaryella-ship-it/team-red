@@ -112,6 +112,8 @@ The final local validation is recorded in
 [FINAL_SECURITY_TEST_MATRIX.md](FINAL_SECURITY_TEST_MATRIX.md). The backend
 suite passed 148 tests, the frontend lint/build passed with documented
 warnings, Compose configuration passed, and both Docker images built
-successfully. Full runtime, browser, backup/restore, HTTPS ingress, dependency
-scanning, SBOM, and image-scanning checks remain deployment-environment tasks;
-the project does not claim those results without executing them.
+successfully. A disposable Docker runtime drill also passed for MySQL, Redis,
+ClamAV, the backend, and the frontend. Browser, backup/restore, HTTPS ingress,
+dependency scanning, SBOM, and image-scanning checks remain deployment-
+environment tasks; the project does not claim those results without executing
+them.
