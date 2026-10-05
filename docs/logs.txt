@@ -8586,7 +8586,7 @@ Agent Response Summary:
 Diagnosed the 401 on /api/auth/me as normal unauthenticated session-check behavior and traced the 500 on /api/auth/register directly to the missing MySQL server connection on 127.0.0.1:3306. Provided resolution paths via Docker Desktop or adding SQLite development support.
 
 Commit SHA:
-Pending
+0f1a276
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
