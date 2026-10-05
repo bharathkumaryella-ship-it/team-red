@@ -2,18 +2,23 @@ import './globals.css';
 
 import type { Metadata } from 'next';
 import { AuthProvider } from './auth-provider';
-import Navigation from './navigation';
+import { ToastProvider } from './components/toast-provider';
+import AppShell from './components/app-shell';
 
 export const metadata: Metadata = {
-  title: 'MediDesk',
-  description: 'Secure clinic and appointment management foundation',
+  title: 'MediDesk — Secure Healthcare Management',
+  description: 'Secure clinic and appointment management platform with role-based access control and comprehensive healthcare workflows.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider><Navigation /><main>{children}</main></AuthProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <AppShell>{children}</AppShell>
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );
