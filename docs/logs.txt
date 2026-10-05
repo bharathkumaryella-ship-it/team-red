@@ -8551,7 +8551,7 @@ Agent Response Summary:
 Diagnosed the PSSecurityException blocking npm.ps1 due to PowerShell's default script execution policy. Provided immediate solutions including calling npm.cmd directly and adjusting ExecutionPolicy to RemoteSigned for the current user or process.
 
 Commit SHA:
-1580dd3
+145c776
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
@@ -8559,3 +8559,39 @@ Files Modified / Created:
 Actions Taken:
 * Analyzed PowerShell ExecutionPolicy error on npm.ps1.
 * Provided npm.cmd fallback and Set-ExecutionPolicy commands.
+
+================================================================================
+[2026-10-05T22:54:52+05:30] Diagnosing /api/auth/me 401 and /api/auth/register 500 error
+================================================================================
+User Prompt (verbatim):
+Failed to load resource: the server responded with a status of 401 (UNAUTHORIZED)
+:5000/api/auth/me:1  Failed to load resource: the server responded with a status of 401 (UNAUTHORIZED)
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+hot-reloader-client.js:44 [Fast Refresh] done in 288ms
+:5000/api/auth/me:1  Failed to load resource: the server responded with a status of 401 (UNAUTHORIZED)
+:5000/api/auth/register:1  Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR)
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+hot-reloader-client.js:44
+
+Agent Response:
+1. /api/auth/me returning 401 (UNAUTHORIZED) is expected and normal for unauthenticated sessions. When the Next.js frontend mounts, it makes a GET request to /api/auth/me to check if a user is currently logged in. Since no session cookie exists yet, the backend correctly responds with 401 Unauthorized, prompting the frontend to display the logged-out state (login/register forms).
+
+2. /api/auth/register returning 500 (INTERNAL SERVER ERROR) is caused by an unreachable database. When registering, User.query.filter_by(email=email).first() attempts to query MySQL at 127.0.0.1:3306. Because MySQL is not running (Docker Desktop is stopped and no local MySQL service is installed), PyMySQL throws OperationalError 2003 ("Can't connect to MySQL server on '127.0.0.1' - WinError 10061 connection refused").
+
+Solutions:
+- Option 1 (Docker/MySQL): Enable WSL 2 in Administrator PowerShell, reboot, and run Docker Desktop so docker compose starts MySQL on port 3306.
+- Option 2 (Local SQLite for Development): Update development configuration in app/config.py to allow SQLite (e.g., sqlite:///medidesk_dev.db) so all features (registration, login, appointments, records) work immediately without Docker or MySQL.
+
+Agent Response Summary:
+Diagnosed the 401 on /api/auth/me as normal unauthenticated session-check behavior and traced the 500 on /api/auth/register directly to the missing MySQL server connection on 127.0.0.1:3306. Provided resolution paths via Docker Desktop or adding SQLite development support.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Tested /api/auth/register endpoint via Python and confirmed OperationalError (WinError 10061).
+* Verified no service is listening on port 3306.
+* Explained difference between normal 401 on /api/auth/me and the database connection failure on /api/auth/register.
