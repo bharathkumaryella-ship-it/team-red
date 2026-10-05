@@ -104,3 +104,14 @@ Key endpoints: `POST /api/appointments`, `GET /api/appointments/my`, `GET /api/a
 ## Secure Medical Records (Phase 6)
 
 Doctors can create a primary medical record only for their own completed appointment. The API derives patient and doctor identities from the appointment, and patients can read only records belonging to their signed-in account. Doctors can list and update records connected to appointments assigned to them; unlinked legacy records are not exposed to doctors. There is no medical-record delete endpoint or admin medical-record endpoint. Patients and doctors have Medical records links in the navigation. See [SECURITY.md](SECURITY.md) for endpoint, audit, migration, and verification details.
+
+## Final security validation
+
+The final local validation is recorded in
+[FINAL_SECURITY_REPORT.md](FINAL_SECURITY_REPORT.md) and
+[FINAL_SECURITY_TEST_MATRIX.md](FINAL_SECURITY_TEST_MATRIX.md). The backend
+suite passed 148 tests, the frontend lint/build passed with documented
+warnings, Compose configuration passed, and both Docker images built
+successfully. Full runtime, browser, backup/restore, HTTPS ingress, dependency
+scanning, SBOM, and image-scanning checks remain deployment-environment tasks;
+the project does not claim those results without executing them.

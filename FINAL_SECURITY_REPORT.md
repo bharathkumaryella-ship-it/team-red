@@ -13,6 +13,8 @@ or destructive exploitation were used.
 |---|---|---|---|
 | FINDING-001 | Medium | Compose defaulted to development mode, which could disable production cookie and configuration safeguards. | Compose now defaults to `FLASK_ENV=production`; local development requires the explicit `docker-compose.dev.yml` override. |
 | FINDING-002 | Medium | The API was published on all host interfaces over plaintext HTTP. | Compose now binds port 5000 to `127.0.0.1` by default. Production ingress should use a TLS reverse proxy on the same host. |
+| FINDING-003 | Medium | Production PHI encryption previously allowed key derivation from `SECRET_KEY`. | Production now fails closed unless `PHI_ENCRYPTION_KEYS` or `PHI_ENCRYPTION_KEYS_FILE` is configured. |
+| FINDING-004 | High | The locked frontend dependency tree contains 7 reported vulnerabilities (1 moderate, 6 high). | No forced upgrade was applied because npm reports that remediation requires breaking Next.js/ESLint upgrades; upgrade and regression-test the frontend dependency tree before public exposure. |
 
 ## Verified controls
 
@@ -35,13 +37,21 @@ or destructive exploitation were used.
 
 ## Validation evidence
 
-- Backend Phase 7 and health regression tests: 10 passed.
+- Full backend suite: 148 passed.
 - Frontend lint and optimized production build: passed; existing hook
-  dependency warnings remain.
+  dependency warnings and a Windows Application Control SWC warning remain.
 - Docker Compose syntax/configuration: passed with synthetic variables.
+- Docker backend and frontend image builds: passed after correcting the
+  backend migration configuration path.
+- `npm audit --audit-level=high`: 7 vulnerabilities reported; forced
+  remediation was intentionally not applied because it requires breaking
+  upgrades.
+- Python dependency audit, SBOM generation, and image scanning were not run
+  because `pip-audit`, `syft`, `trivy`, and `grype` are not installed.
 - Tracked secret check: no non-example environment files were found.
-- Docker image build and full Compose/browser/persistence workflow: pending
-  because the local Docker Desktop Linux engine was unavailable.
+- Full Compose runtime, browser, persistence, backup/restore, and TLS ingress
+  workflows remain pending; no runtime PHI secret file or live ingress was
+  available in this environment.
 
 ## Residual risks
 
@@ -59,6 +69,10 @@ live deployment URL is claimed by this report.
 The application now fails closed in production when a dedicated
 `PHI_ENCRYPTION_KEYS` or `PHI_ENCRYPTION_KEYS_FILE` value is missing. Development
 and test environments retain their existing local behavior.
+
+The backend Dockerfile now copies `migrations/alembic.ini` from its actual
+location, and both application images build successfully. See
+`FINAL_SECURITY_TEST_MATRIX.md` for the complete acceptance matrix.
 
 ## 2026-10-06 implementation and review update
 

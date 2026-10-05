@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 COPY --chown=app:app app ./app
 COPY --chown=app:app migrations ./migrations
-COPY --chown=app:app alembic.ini ./alembic.ini
+COPY --chown=app:app migrations/alembic.ini ./alembic.ini
 COPY --chown=app:app run.py .
 COPY --chown=app:app entrypoint.sh .
 RUN sed -i 's/\r$//' entrypoint.sh && chmod 0550 entrypoint.sh
