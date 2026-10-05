@@ -2,7 +2,7 @@ FROM node:20-alpine AS base
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npm run build
@@ -12,9 +12,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=base /app/.next/standalone .
-COPY --from=base /app/public ./public
-COPY --from=base /app/.next/static ./.next/static
+RUN addgroup --system --gid 10001 nodejs \
+    && adduser --system --uid 10001 nextjs
+
+COPY --from=base --chown=nextjs:nodejs /app/.next/standalone .
+COPY --from=base --chown=nextjs:nodejs /app/.next/static ./.next/static
+USER nextjs
 
 EXPOSE 3000
 ENV PORT=3000

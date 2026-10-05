@@ -61,7 +61,9 @@ The browser sends credentialed requests to the Flask REST API, which checks the 
 | **Phase 2: Core Domain & Models** | 4h – 12h | Database models, migrations, relationships, seed data, comprehensive tests | Model test suite (20/20 passing) | `Complete` |
 | **Phase 3: Authentication & RBAC** | 12h - 18h | Sessions, registration/login, role helpers, rate limits | Auth and privilege tests | `Complete` |
 | **Phase 4: Patient & Doctor Management** | 18h - 22h | Self-service profiles, directory, admin account management | Ownership, role, mass-assignment, search, pagination tests | `Complete` |
-| **Phase 5: Appointment Management** | 22h - 24h | Patient booking/history/cancellation, doctor schedule and transitions, admin search/status | Ownership, IDOR, state machine, overlap, input, and pagination tests | `In progress` |
+| **Phase 5: Appointment Management** | 22h - 24h | Patient booking/history/cancellation, doctor schedule and transitions, admin search/status | Ownership, IDOR, state machine, overlap, input, and pagination tests | `Complete` |
+| **Phase 6: Medical Records** | 24h+ | Doctor-authored records linked to completed appointments with patient and doctor views | Record ownership, assignment, field allowlist, and clinical-data logging tests | `Complete` |
+| **Phase 7: Security Hardening** | 24h+ | Defensive assessment, Docker hardening, CSRF origin checks, shared rate-limit requirement, and audit report | Focused security tests 3/3; frontend lint/type/build and Compose validation pass; full backend suite awaits local Redis client install (142/143 passed) | `Implemented; full local suite pending` |
 
 ---
 
@@ -85,6 +87,12 @@ The browser sends credentialed requests to the Flask REST API, which checks the 
 - **Decision & Rationale:** The project uses `.env.example` and Docker environment variables so deployment is reproducible without exposing real credentials.
 - **Security & Performance Trade-offs:** Requires careful environment setup, but it reduces secret leakage and makes public deployment safer.
 
+### ADR-003: Keep database networking internal and fail closed for production abuse controls
+- **Status:** Accepted
+- **Context:** The local Compose stack previously exposed MySQL on the host and allowed production rate limiting to default to per-process memory.
+- **Decision & Rationale:** Compose now requires environment-provided database credentials, leaves MySQL on the internal service network, and requires a shared persistent limiter backend in production. Local development retains explicit localhost frontend and backend ports.
+- **Security & Performance Trade-offs:** Developers must copy and populate the root environment template, and production deployment must provision Redis or another supported shared limiter store. These requirements prevent accidental public database access and distributed rate-limit bypass.
+
 ---
 
 ## 5. Engineering Journal & Real-Time Decision Log
@@ -98,6 +106,11 @@ The browser sends credentialed requests to the Flask REST API, which checks the 
 - **Focus:** Create a stable backend and UI shell that supports later patient/doctor/admin features without introducing business-domain functionality too early.
 - **Key Challenges:** Avoid overbuilding business logic while still creating enough structure for later modules.
 - **Resolution:** The backend exposes only health, the frontend includes placeholder pages, and all configuration remains environment based.
+
+### 2026-10-05 19:30 IST — Phase 7 defensive hardening complete
+- **Focus:** Assess and harden authentication boundaries, API ownership checks, Docker configuration, secrets templates, rate limiting, and response security.
+- **Key Challenges:** Preserve the Phase 1-6 API contract while removing insecure Compose defaults and strengthening cookie mutation origin checks.
+- **Resolution:** Removed the public MySQL port and literal Compose credentials, added non-root frontend execution and no-new-privileges, required shared production limiter storage, added production origin enforcement, and documented verified findings and remaining partial controls in `SECURITY_AUDIT.md`.
 
 ---
 

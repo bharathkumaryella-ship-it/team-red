@@ -71,10 +71,22 @@ def create_app(
         """Block cross-origin browser writes to every cookie-authenticated API."""
         if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
             origin = request.headers.get("Origin")
-            if origin and origin.rstrip("/") not in app.config["CORS_ALLOWED_ORIGINS"]:
+            referer = request.headers.get("Referer")
+            trusted_origins = app.config["CORS_ALLOWED_ORIGINS"]
+            request_origin = origin or (referer and referer.rstrip("/").rsplit("/", 1)[0])
+            if request_origin and request_origin.rstrip("/") not in trusted_origins:
                 return jsonify(error={
                     "code": "ORIGIN_NOT_ALLOWED",
                     "message": "The request origin is not allowed.",
+                }), 403
+            if (
+                app.config["ENVIRONMENT"] == "production"
+                and session.get("user_id") is not None
+                and not request_origin
+            ):
+                return jsonify(error={
+                    "code": "ORIGIN_REQUIRED",
+                    "message": "A trusted request origin is required.",
                 }), 403
 
     with app.app_context():

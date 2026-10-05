@@ -201,3 +201,5 @@ def validate_config(config: Mapping[str, Any]) -> None:
         for origin in config["CORS_ALLOWED_ORIGINS"]:
             if urlsplit(origin).scheme != "https":
                 raise ValueError("Production CORS origins must use HTTPS.")
+        if config["RATELIMIT_STORAGE_URI"].startswith("memory://"):
+            raise ValueError("Production rate limiting requires shared persistent storage.")

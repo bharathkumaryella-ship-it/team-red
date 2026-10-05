@@ -74,6 +74,7 @@ def test_production_config_disables_debug_and_requires_https_origins(monkeypatch
     monkeypatch.setenv("SECRET_KEY", "s" * 48)
     monkeypatch.setenv("JWT_SECRET_KEY", "j" * 48)
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", "https://clinic.example.com")
+    monkeypatch.setenv("RATELIMIT_STORAGE_URI", "redis://redis:6379/0")
 
     app = create_app("production")
     config = app.config
@@ -102,4 +103,18 @@ def test_production_config_rejects_placeholder_secrets(monkeypatch):
     monkeypatch.setenv("CORS_ALLOWED_ORIGINS", "https://clinic.example.com")
 
     with pytest.raises(ValueError, match="SECRET_KEY"):
+        create_app("production")
+
+
+def test_production_config_rejects_process_local_rate_limits(monkeypatch):
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "******localhost/test-db",
+    )
+    monkeypatch.setenv("SECRET_KEY", "s" * 48)
+    monkeypatch.setenv("JWT_SECRET_KEY", "j" * 48)
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", "https://clinic.example.com")
+    monkeypatch.setenv("RATELIMIT_STORAGE_URI", "memory://")
+
+    with pytest.raises(ValueError, match="shared persistent storage"):
         create_app("production")
