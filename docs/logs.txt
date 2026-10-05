@@ -634,3 +634,14 @@ Files Modified / Created:
 Actions Taken:
 * Updated the runtime and development requirements manifests and README install commands.
 * Ran pytest (6 passed), compileall, workspace diagnostics, and git diff --check.
+================================================================================
+[2026-10-05T14:52:41+05:30] Commit reference for dependency separation
+================================================================================
+Follow-up commit SHA:
+883f8ccb14183539b60e94a5f1ec0db3b8140167
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Recorded the commit containing the runtime/development dependency separation.
