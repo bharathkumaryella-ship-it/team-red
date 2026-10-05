@@ -4744,3 +4744,18 @@ Files Modified / Created:
 Actions Taken:
 * Ran `git push origin main`; Git rejected `main -> main` as non-fast-forward
 * Did not force push, merge, reset, or push another branch
+
+================================================================================
+[2026-10-05T18:49:54+05:30] Push-conflict log commit SHA recorded
+================================================================================
+The local push-conflict log commit is `8b0fcb81d96d27fd0c7da7c29cbc9dbe7313e7da`. The earlier Phase 5 feature commit remains `de0da5402da9294065b8018873beb4306addc7dc`. These local commits are not on GitHub because `origin main` rejected the normal push; no further push was attempted after the conflict.
+
+Commit SHA:
+8b0fcb81d96d27fd0c7da7c29cbc9dbe7313e7da
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Recorded the local commit SHA for the push-conflict log entry
+* Stopped after the reported non-fast-forward rejection
