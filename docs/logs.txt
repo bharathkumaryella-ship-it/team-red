@@ -9103,7 +9103,7 @@ Agent Response Summary:
 Hardened login abuse handling, attachment persistence and request-size boundaries, upgraded the affected frontend dependency, and added browser-facing security headers with a nonce-based CSP. Documented architecture changes and remaining validation/deployment work. No tests/build were run.
 
 Commit SHA:
-PENDING
+ c6aafdd94bcf0f540a5bc9389d02862399c5ab6e
 
 Files Modified / Created:
 * .env.example (Modified)
