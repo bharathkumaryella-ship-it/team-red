@@ -9485,3 +9485,4 @@ Actions Taken:
 * Cleared ignored `.next` output and ran frontend production build successfully.
 * Documented database-at-rest encryption as an operator responsibility.
 * Preserved unrelated uncommitted changes outside this fix.
+Commit recorded for CSP restoration: 541d1fc0dde1078c66ca870b1da3b4b11b67b8a5
