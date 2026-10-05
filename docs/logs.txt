@@ -929,7 +929,7 @@ Agent Response Summary:
 Used the new screenshot error to distinguish a Docker engine virtualization prerequisite failure from a backend problem. Gave targeted checks for firmware virtualization, Windows virtualization features, and nested virtualization, without changing source code.
 
 Commit SHA:
-Pending
+00e2a0e
 
 Files Modified / Created:
 * docs/logs.txt (Modified)
