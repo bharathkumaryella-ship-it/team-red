@@ -8324,3 +8324,48 @@ Actions Taken:
 * Checked Docker Desktop status.
 * Confirmed Docker Desktop was not running.
 * Started `docker desktop start`.
+
+================================================================================
+[2026-10-05T22:19:55+05:30] Confirm Docker virtualization requirement
+================================================================================
+User Prompt (verbatim):
+<current_datetime>2026-10-05T22:19:55.700+05:30</current_datetime>
+
+PS C:\Users\bhara\BuildSecure> docker desktop status
+Name                Value
+SessionID           32c6f512-237c-41c6-b9c2-9984adaa7356
+Status              stopped
+(.venv) PS C:\Users\bhara\BuildSecure> docker info
+Client:
+ Version:    29.8.1
+ Context:    desktop-linux
+Server:
+ERROR: request returned 500 Internal Server Error ... dockerDesktopLinuxEngine ...
+
+The Docker Desktop window reports: "Virtualization support not detected" and "Docker Desktop failed to start because virtualization support wasn't detected."
+
+Agent Response:
+The screenshot confirms the root cause: Docker Desktop cannot start its Linux engine because hardware virtualization is disabled, unavailable, or blocked by firmware or organization policy. This is not a Compose or application-code error.
+
+Enable virtualization in the computer BIOS/UEFI (Intel VT-x/Intel Virtualization Technology or AMD SVM/AMD-V), then in an elevated PowerShell enable the Windows virtualization features:
+
+```powershell
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+wsl --set-default-version 2
+```
+
+Restart Windows, open Docker Desktop, and wait for `docker desktop status` to show `Status running`. Verify with `docker info`, then retry the Compose command. If BIOS settings are locked or virtualization is unavailable, contact the system administrator or use another machine; do not weaken the application architecture to bypass this dependency.
+
+Agent Response Summary:
+Identified the Docker Desktop virtualization failure from the provided screenshot. No source files were modified; the required remediation is enabling BIOS virtualization and Windows Virtual Machine Platform/WSL 2 support.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Reviewed the Docker Desktop status and error shown in the screenshot.
+* Distinguished host virtualization failure from project configuration.
