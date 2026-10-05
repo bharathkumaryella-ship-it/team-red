@@ -3,6 +3,9 @@
   "python.analysis.extraPaths": [
     "${workspaceFolder}/src/backend"
   ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/src/backend"
+  ],
   "python.testing.pytestArgs": [
     "src/backend/tests"
   ],

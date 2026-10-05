@@ -1,0 +1,10 @@
+{
+  "include": [
+    "src/backend"
+  ],
+  "extraPaths": [
+    "src/backend"
+  ],
+  "venvPath": ".",
+  "venv": ".venv"
+}
