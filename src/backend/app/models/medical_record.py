@@ -30,5 +30,25 @@ class MedicalRecord(db.Model):
     doctor = db.relationship("User", foreign_keys=[doctor_id], back_populates="medical_records_as_doctor")
     appointment = db.relationship("Appointment", back_populates="medical_records")
 
+    def __init__(
+        self,
+        patient_id: int | None = None,
+        doctor_id: int | None = None,
+        appointment_id: int | None = None,
+        diagnosis: str | None = None,
+        notes: str | None = None,
+        prescription: str | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            patient_id=patient_id,
+            doctor_id=doctor_id,
+            appointment_id=appointment_id,
+            diagnosis=diagnosis,
+            notes=notes,
+            prescription=prescription,
+            **kwargs,
+        )
+
     def __repr__(self):
         return f"<MedicalRecord id={self.id} patient_id={self.patient_id} doctor_id={self.doctor_id}>"

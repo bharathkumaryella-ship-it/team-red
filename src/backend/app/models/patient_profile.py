@@ -23,5 +23,23 @@ class PatientProfile(db.Model):
 
     user = db.relationship("User", back_populates="patient_profile")
 
+    def __init__(
+        self,
+        user_id: int | None = None,
+        date_of_birth=None,
+        gender: str | None = None,
+        blood_group: str | None = None,
+        address: str | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            user_id=user_id,
+            date_of_birth=date_of_birth,
+            gender=gender,
+            blood_group=blood_group,
+            address=address,
+            **kwargs,
+        )
+
     def __repr__(self):
         return f"<PatientProfile id={self.id} user_id={self.user_id}>"

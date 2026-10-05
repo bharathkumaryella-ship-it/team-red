@@ -110,6 +110,7 @@ class TestUser:
 
             with pytest.raises(Exception):
                 db.session.commit()
+            db.session.rollback()
 
     def test_user_repr(self, app):
         """Test user string representation."""
@@ -241,6 +242,7 @@ class TestDoctorProfile:
 
             with pytest.raises(Exception):
                 db.session.commit()
+            db.session.rollback()
 
     def test_doctor_profile_user_relationship(self, app):
         """Test doctor profile to user relationship."""
@@ -337,6 +339,7 @@ class TestAppointment:
 
             with pytest.raises(Exception):
                 db.session.commit()
+            db.session.rollback()
 
     def test_appointment_patient_not_doctor_constraint(self, app):
         """Test that patient and doctor cannot be the same person."""
@@ -362,6 +365,7 @@ class TestAppointment:
 
             with pytest.raises(Exception):
                 db.session.commit()
+            db.session.rollback()
 
     def test_appointment_relationships(self, app):
         """Test appointment relationships to patient and doctor."""

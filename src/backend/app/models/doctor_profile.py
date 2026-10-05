@@ -23,5 +23,23 @@ class DoctorProfile(db.Model):
 
     user = db.relationship("User", back_populates="doctor_profile")
 
+    def __init__(
+        self,
+        user_id: int | None = None,
+        specialization: str = "",
+        license_number: str = "",
+        experience_years: int | None = None,
+        bio: str | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            user_id=user_id,
+            specialization=specialization,
+            license_number=license_number,
+            experience_years=experience_years,
+            bio=bio,
+            **kwargs,
+        )
+
     def __repr__(self):
         return f"<DoctorProfile id={self.id} specialization={self.specialization} user_id={self.user_id}>"

@@ -68,6 +68,26 @@ class User(db.Model):
         cascade="all, delete-orphan",
     )
 
+    def __init__(
+        self,
+        email: str = "",
+        password_hash: str = "",
+        full_name: str = "",
+        phone: str | None = None,
+        role: UserRole = UserRole.PATIENT,
+        is_active: bool = True,
+        **kwargs,
+    ):
+        super().__init__(
+            email=email,
+            password_hash=password_hash,
+            full_name=full_name,
+            phone=phone,
+            role=role,
+            is_active=is_active,
+            **kwargs,
+        )
+
     def __repr__(self):
         return f"<User id={self.id} email={self.email} role={self.role}>"
 

@@ -46,5 +46,27 @@ class Appointment(db.Model):
         db.CheckConstraint("patient_id != doctor_id", name="check_appointment_patient_not_doctor"),
     )
 
+    def __init__(
+        self,
+        patient_id: int | None = None,
+        doctor_id: int | None = None,
+        start_at=None,
+        end_at=None,
+        status: AppointmentStatus = AppointmentStatus.PENDING,
+        reason: str | None = None,
+        notes: str | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            patient_id=patient_id,
+            doctor_id=doctor_id,
+            start_at=start_at,
+            end_at=end_at,
+            status=status,
+            reason=reason,
+            notes=notes,
+            **kwargs,
+        )
+
     def __repr__(self):
         return f"<Appointment id={self.id} patient_id={self.patient_id} doctor_id={self.doctor_id} status={self.status}>"

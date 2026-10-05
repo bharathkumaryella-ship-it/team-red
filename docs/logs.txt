@@ -8709,7 +8709,7 @@ Agent Response Summary:
 Audited the entire project for syntax, type, compilation, and test errors. Resolved SQLAlchemy 2.0 deprecations in test_models.py, verified all 20 Next.js routes build successfully, and confirmed all 144 backend tests pass with zero warnings.
 
 Commit SHA:
-847edf8
+8f64f5d
 
 Files Modified / Created:
 * src/backend/tests/test_models.py (Modified)
@@ -8720,3 +8720,41 @@ Actions Taken:
 * Ran Python compileall across src/backend.
 * Replaced legacy `Model.query.get()` with `db.session.get()` in `src/backend/tests/test_models.py`.
 * Executed full pytest suite (144 passed, 0 warnings).
+
+================================================================================
+[2026-10-05T23:35:06+05:30] Resolving IDE language server model constructor errors
+================================================================================
+User Prompt (verbatim):
+still there errors in the project
+
+Agent Response:
+Investigated the active file (src/backend/tests/test_models.py) where the user was viewing line 251.
+Identified that static type checkers (Pylance/Pyright) in the IDE flagged model instantiations (such as User(full_name=...), DoctorProfile(...)) because SQLAlchemy models dynamically generate __init__ at runtime rather than declaring explicit constructors.
+
+Implemented the following fixes:
+1. Added explicit, typed `__init__` constructors to all core models: User, DoctorProfile, PatientProfile, Appointment, and MedicalRecord. This completely resolves Pylance/Pyright "unexpected keyword argument" diagnostics.
+2. Configured `.vscode/settings.json` with `python.analysis.extraPaths` pointing to `src/backend` so that `import app` resolves without import errors in the editor.
+3. Added session rollbacks after expected constraint exceptions in `test_models.py`.
+4. Verified that all 144 pytest test cases continue passing with 100% success and zero warnings.
+
+Agent Response Summary:
+Eliminated static type checker and IDE diagnostic errors on SQLAlchemy model instantiations by adding explicit constructors and configuring VS Code extraPaths. Confirmed all 144 backend tests pass with zero warnings.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* src/backend/app/models/user.py (Modified)
+* src/backend/app/models/doctor_profile.py (Modified)
+* src/backend/app/models/patient_profile.py (Modified)
+* src/backend/app/models/appointment.py (Modified)
+* src/backend/app/models/medical_record.py (Modified)
+* src/backend/tests/test_models.py (Modified)
+* .vscode/settings.json (Created)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added explicit `__init__` constructors to User, DoctorProfile, PatientProfile, Appointment, and MedicalRecord.
+* Created `.vscode/settings.json` to configure interpreter and extraPaths.
+* Added clean session rollbacks in test_models.py constraint test cases.
+* Re-ran full test suite (144 passed).
