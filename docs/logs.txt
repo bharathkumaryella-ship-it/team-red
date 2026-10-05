@@ -851,3 +851,23 @@ Files Modified / Created:
 
 Actions Taken:
 * Recorded the commit containing this turn's Docker troubleshooting log.
+================================================================================
+[2026-10-05T15:13:34+05:30] Starting installed Docker Desktop
+================================================================================
+User Prompt (verbatim):
+Yes, installed but not running
+
+Agent Response:
+Since Docker Desktop is installed but stopped, start it from the Windows Start menu and wait until it reports that the engine is running. Then open a new PowerShell window and run docker info; if that succeeds, retry the build and run commands separately from the repository root. If Docker Desktop fails to start or docker info reports an engine error, share that exact output. If docker is still not recognized after Docker Desktop starts and the new shell is opened, the CLI path needs repair; the Python venv is unrelated.
+
+Agent Response Summary:
+The user confirmed Docker Desktop is installed but not running. Provided the appropriate next step—start the desktop engine before testing the CLI—without making a code or machine configuration change.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Logged the user's Docker Desktop status and the next troubleshooting step.
