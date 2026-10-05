@@ -8,10 +8,10 @@ Next.js Frontend :3000
   |
   v
 Flask API :5000
-  |              \
-  v               v
-MySQL          Redis
-(internal)     (internal rate-limit state)
+  |       |      |       \
+  v       v      v        v
+MySQL   Redis  ClamAV   attachment_data
+(internal services; encrypted files)
 ```
 
 ## Trust boundaries and controls
@@ -26,6 +26,9 @@ MySQL          Redis
   `.env` files are ignored and never copied into images.
 - `mysql_data` persists database state across restarts and normal
   `docker compose down` / `up` cycles.
+- The backend scans uploads through the internal ClamAV service before storing
+  them encrypted in the persistent `attachment_data` volume. Database PHI
+  fields are encrypted with `PHI_ENCRYPTION_KEYS`.
 - Production HTTPS is terminated by a reverse proxy or hosting platform.
   HSTS is emitted only when Flask runs in production mode; this configuration
   does not pretend that local HTTP is HTTPS.

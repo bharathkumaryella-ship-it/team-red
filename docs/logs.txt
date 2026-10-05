@@ -9255,3 +9255,56 @@ Files Modified / Created:
 * docs/logs.txt (Modified)
 Actions Taken:
 * Recorded the review-log commit SHA.
+
+================================================================================
+[2026-10-06T00:50:37+05:30] Fix project review findings
+================================================================================
+User Prompt (verbatim):
+work and fix on findings
+
+Agent Response:
+I am correcting the Next.js manifest/lock mismatch, fixing Referer origin parsing, and bringing the security audit, final report, and deployment guidance up to date with the implemented encryption and malware scanning controls. I will preserve historical verification limits and will not claim tests or deployment checks that were not run.
+
+Agent Response Summary:
+Implementation is in progress for the actionable findings from the project review. Static inspection only; no tests or builds will be run.
+
+Commit SHA:
+PENDING
+
+Files Modified / Created:
+* PENDING
+
+Actions Taken:
+* Confirmed the working-tree package downgrade conflicts with the lockfile and documented security findings.
+
+================================================================================
+[2026-10-06T00:53:14+05:30] Resolve project review findings
+================================================================================
+User Prompt (verbatim):
+work and fix on findings
+
+Agent Response:
+Resolved the Next.js manifest/lock mismatch by restoring the manifest to the lockfile's 15.5.27 pin; corrected trusted Referer handling to parse and canonicalize scheme/host/port; updated the security audit, final report, deployment architecture, Docker checklist, deployment guide, and approach notes for PHI encryption, ClamAV, key custody, plaintext search fields, and pre-migration backups. Historical test evidence is explicitly separated from changes that were only statically reviewed. `git diff --check` passed; tests/builds and deployment checks were not run.
+
+Agent Response Summary:
+Fixed the application-origin parsing and dependency mismatch, and corrected project documentation so it reflects actual controls and deployment prerequisites. Preserved the prior package change's intended resolution, with no package-lock change needed because it already pins 15.5.27.
+
+Commit SHA:
+PENDING
+
+Files Modified / Created:
+* DEPLOYMENT.md (Modified)
+* DEPLOYMENT_ARCHITECTURE.md (Modified)
+* DOCKER_SECURITY_CHECKLIST.md (Modified)
+* FINAL_SECURITY_REPORT.md (Modified)
+* SECURITY_AUDIT.md (Modified)
+* docs/APPROACH.md (Modified)
+* docs/logs.txt (Modified)
+* src/backend/app/__init__.py (Modified)
+* src/frontend/package.json (Restored to lockfile-matching version 15.5.27)
+
+Actions Taken:
+* Parsed Origin/Referer with URL parsing and canonicalized scheme, host, and port before allowlist checks.
+* Restored package manifest versions to match package-lock.json (15.5.27).
+* Updated security and deployment documentation, including 4 GiB ClamAV memory guidance and non-downgradeable migration backup/key requirements.
+* Ran git diff --check; no tests, builds, or deployment actions run.

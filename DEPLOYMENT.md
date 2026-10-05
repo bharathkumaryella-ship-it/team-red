@@ -9,7 +9,7 @@ only; the frontend and API ports are the only host-published ports.
 ## Requirements
 
 - Docker Engine with Docker Compose v2
-- At least 2 GB available memory
+- At least 4 GB available memory for the ClamAV service, in addition to application and database needs
 - A reverse proxy or hosting platform for production TLS termination
 
 ## Local setup
@@ -35,12 +35,27 @@ process-local rate-limit storage. Terminate TLS at a reverse proxy or hosting
 platform and forward `/api` to the backend on port 5000. Do not enable HSTS
 until HTTPS is actually active.
 
+Also set `PHI_ENCRYPTION_KEYS` to a comma-separated Fernet key ring. Generate a
+key with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+and provide it through the deployment secret manager. Keep old keys available
+until every value encrypted by them has been re-encrypted; losing a required key
+makes the associated records and attachments unrecoverable. ClamAV must finish
+its first signature initialization before the backend becomes healthy.
+
 ## Database and migrations
 
-The backend waits for healthy MySQL and Redis services, then runs the existing
-Alembic migration chain with `flask db upgrade` before starting Gunicorn.
-Migrations are non-destructive; the stack never drops or recreates the database.
-MySQL data persists in the `mysql_data` named volume.
+The backend waits for healthy MySQL, Redis, and ClamAV services, then runs the
+Alembic migration chain with `flask db upgrade` before starting Gunicorn. The
+stack never drops or recreates the database. The PHI encryption migration
+rewrites selected data in place and cannot be downgraded; follow the backup
+steps below before deploying it. MySQL data persists in the `mysql_data` named
+volume.
+
+The PHI-encryption migration rewrites existing database values and attachment
+files in place. Before deploying a release that applies it, stop application
+writes, back up both the MySQL database and `attachment_data` volume, securely
+retain the matching encryption key with the backup, and verify that the backup
+can be restored. Do not start the new backend until these prerequisites are met.
 
 ## Operations
 

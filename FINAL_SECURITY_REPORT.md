@@ -49,3 +49,24 @@ Docker image builds, live browser workflows, MySQL persistence across a full
 down/up cycle, and TLS reverse-proxy behavior must be executed in an environment
 with Docker and the chosen deployment platform. No live deployment URL is
 claimed by this report.
+
+## 2026-10-06 implementation and review update
+
+The current source adds Fernet encryption for selected clinical/profile fields,
+appointment details, phone numbers, attachment filenames, and attachment
+bytes. New uploads are rejected if ClamAV detects malware or cannot provide a
+verdict. The migration converts existing selected values and attachment files
+in place; it cannot be downgraded. Before applying it, back up both the
+database and attachment volume and retain the matching encryption key.
+
+User names and email addresses remain plaintext to support current login,
+ordering, and search. Database/volume encryption, protected key custody, tested
+backup restoration, ClamAV operation, and TLS termination must be verified in
+the deployment environment. The Next.js package manifest and lockfile are
+aligned at 15.5.27; mutation Referer validation now compares the parsed origin,
+not a truncated path.
+
+This update was reviewed statically. No tests, frontend build, Docker build,
+scanner integration, or production migration was run for it. The validation
+evidence in the earlier report records the earlier snapshot and does not verify
+these additions.

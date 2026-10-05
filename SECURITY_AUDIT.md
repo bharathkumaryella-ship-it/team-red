@@ -86,8 +86,25 @@ The focused Phase 7 security tests passed (3/3). The frontend lint, TypeScript c
 1. Set generated secrets and a shared limiter backend through the deployment secret manager.
 2. Run dependency scanning and container image scanning on every release.
 3. Keep MySQL private and restrict backend ingress to the approved frontend or reverse proxy.
-4. For future uploads, enforce extension and content allowlists, size limits, randomized names, non-executable storage, path-traversal rejection, malware scanning, and object-level download authorization.
+4. Upload extension/content allowlists, size limits, randomized storage names, non-executable storage, malware scanning, and object-level download authorization are now implemented. Verify these controls against the deployed scanner and storage configuration before production use.
 
 ## Final Security Status
 
 Phase 7 defensive hardening is complete for the verified local application scope. No unverified vulnerability is reported as confirmed. The remaining partial controls above require deployment-level decisions rather than silent defaults.
+
+## Post-audit implementation update (2026-10-06)
+
+Since the Phase 7 verification above, selected clinical/profile fields and
+attachment filenames/content gained Fernet encryption, and attachment uploads
+now require a clean verdict from the private ClamAV service. Existing values
+are converted by an in-place Alembic migration. Names and email addresses
+remain plaintext for current login/search behavior. The deployment guide now
+requires a coordinated database and attachment-volume backup plus retention of
+the matching key before migration. The current Next.js manifest and lockfile
+are aligned at 15.5.27, and mutation Referer checks parse the origin separately
+from the path.
+
+These post-audit changes were reviewed statically only. Their migration,
+ClamAV runtime behavior, production restore procedure, and frontend build were
+not re-verified as part of this update. Do not treat the historical test
+results above as verification of these changes.

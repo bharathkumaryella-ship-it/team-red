@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+from urllib.parse import urlsplit
 
 from flask import Flask, session, request, jsonify
 from flask_cors import CORS
@@ -17,6 +18,29 @@ from app.middleware.security_headers import register_security_headers
 from app.routes import register_routes
 from app.utils.logging_config import configure_logging
 from app.auth import limiter, auth_bp
+
+
+def _normalized_origin(value: str, *, allow_path: bool = False) -> str | None:
+    """Parse an Origin or Referer into its canonical scheme/host/port origin."""
+    try:
+        parsed = urlsplit(value)
+        if (
+            parsed.scheme.lower() not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or (not allow_path and (parsed.path or parsed.query or parsed.fragment))
+        ):
+            return None
+        hostname = parsed.hostname.lower()
+        if ":" in hostname:
+            hostname = f"[{hostname}]"
+        port = parsed.port
+        default_port = 443 if parsed.scheme.lower() == "https" else 80
+        netloc = hostname if port is None or port == default_port else f"{hostname}:{port}"
+        return f"{parsed.scheme.lower()}://{netloc}"
+    except ValueError:
+        return None
 
 
 def create_app(
@@ -74,9 +98,20 @@ def create_app(
         if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
             origin = request.headers.get("Origin")
             referer = request.headers.get("Referer")
-            trusted_origins = app.config["CORS_ALLOWED_ORIGINS"]
-            request_origin = origin or (referer and referer.rstrip("/").rsplit("/", 1)[0])
-            if request_origin and request_origin.rstrip("/") not in trusted_origins:
+            trusted_origins = {
+                normalized
+                for allowed in app.config["CORS_ALLOWED_ORIGINS"]
+                if (normalized := _normalized_origin(allowed)) is not None
+            }
+            request_origin = _normalized_origin(origin) if origin else None
+            if not origin and referer:
+                request_origin = _normalized_origin(referer, allow_path=True)
+            if (origin or referer) and not request_origin:
+                return jsonify(error={
+                    "code": "ORIGIN_NOT_ALLOWED",
+                    "message": "The request origin is not allowed.",
+                }), 403
+            if request_origin and request_origin not in trusted_origins:
                 return jsonify(error={
                     "code": "ORIGIN_NOT_ALLOWED",
                     "message": "The request origin is not allowed.",

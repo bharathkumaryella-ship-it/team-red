@@ -11,11 +11,15 @@
 | Secure environment configuration | PASS | Required secrets and origins are validated at startup. |
 | Health checks | PASS | MySQL, Redis, backend, and frontend checks are defined. |
 | Persistent database volume | PASS | `mysql_data` is a named volume. |
+| Attachment storage is private and persistent | PASS | Encrypted attachments use the backend-only `attachment_data` volume. |
+| Malware scan before attachment storage | CONFIGURED | Uploads require a clean verdict from the internal ClamAV service; runtime scanning has not been exercised in this environment. |
+| PHI encryption key supplied at runtime | REQUIRED | Compose requires `PHI_ENCRYPTION_KEYS`; key custody and restore remain operator responsibilities. |
 | Minimal exposed ports | PASS | Only frontend and API ports are published for the local stack. |
 | `.dockerignore` configured | PASS | Frontend/backend ignore secrets, VCS, caches, tests, and logs. |
 | Security headers retained | PASS | Flask middleware retains CSP, HSTS in production, and related headers. |
 | CORS restricted | PASS | Explicit origins are required; wildcard origins are rejected. |
 | Logs avoid secrets | PASS | Existing audit/error logging excludes passwords, tokens, and clinical text. |
 
-Docker image builds and full browser flows require a running Docker Engine and
-were not claimed until executed in an environment with Docker available.
+Docker image builds, scanner operation, and full browser flows require a running
+Docker Engine and were not claimed until executed in an environment with Docker
+available.
