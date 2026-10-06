@@ -27,13 +27,13 @@ MediDesk is a secure digital clinic platform for patient, doctor, and admin work
 ## 2. Technical Architecture & Secure System Design
 
 ### 2.1 High-Level Architecture Overview
-The application uses a Next.js frontend and a Flask API with SQLAlchemy and MySQL. Phase 4 adds patient and doctor profile management, a patient-facing doctor directory, and admin management endpoints. The Flask backend remains the authorization boundary; credentials and database settings come from environment configuration.
+The application uses a Next.js frontend and a Flask API with SQLAlchemy. Local Docker development uses MySQL; hosted deployments may use PostgreSQL through `DATABASE_URL`. Phase 4 adds patient and doctor profile management, a patient-facing doctor directory, and admin management endpoints. The Flask backend remains the authorization boundary; credentials and database settings come from environment configuration.
 
 ### 2.2 Data Flow & Component Interaction
-The browser sends credentialed requests to the Flask REST API, which checks the signed session, account status, and endpoint role before reading or changing records. Patient self-service routes address only the authenticated user's own profile. Admin routes use explicit allowlists and bounded pagination; doctor directory responses expose professional information only. The browser never connects directly to MySQL.
+The browser sends credentialed requests to the Flask REST API, which checks the signed session, account status, and endpoint role before reading or changing records. Patient self-service routes address only the authenticated user's own profile. Admin routes use explicit allowlists and bounded pagination; doctor directory responses expose professional information only. The browser never connects directly to the database.
 
 ### 2.3 Technology Stack Rationale
-- Backend: Flask + SQLAlchemy with MySQL via PyMySQL for a simple, modular Python API foundation.
+- Backend: Flask + SQLAlchemy with MySQL via PyMySQL locally and PostgreSQL via Psycopg for hosted deployments.
 - Frontend: Next.js TypeScript with App Router for a familiar secure web client architecture and route-based role pages.
 - Deployment: Docker and Docker Compose to support local development and later public hosting.
 - Security posture: environment-driven configuration, CORS restrictions, security headers, and generic error responses before business logic is added.
@@ -46,7 +46,7 @@ The browser sends credentialed requests to the Flask REST API, which checks the 
 5. Secrets & configuration hygiene: environment variables are required for secrets, database credentials, and CORS origins; production invalidates weak placeholder values.
 
 ### Phase 1 Decisions
-- `DATABASE_URL` takes precedence over the MySQL component variables when set.
+- `DATABASE_URL` takes precedence over the MySQL component variables when set and accepts MySQL or PostgreSQL URLs.
 - The `/api/health` route is intentionally non-sensitive and performs no database connectivity checks.
 - The app uses a Flask factory, modular blueprints, and environment selection to keep future domain development low-risk.
 - The frontend uses a centralized API service layer and environment-based `NEXT_PUBLIC_API_URL` rather than hardcoded backend URLs.
@@ -172,7 +172,7 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 - Installed Flask-Migrate (Alembic) for versioned schema management
 - Initialized Alembic folder structure and configuration
 - Generated first automatic migration (`0d187483051c`) detecting all five tables, indexes, and constraints
-- Migration applies safely to both SQLite (testing) and MySQL (production)
+- Migration support covers SQLite (testing) and MySQL; PostgreSQL hosted deployment support is newly added and still needs a live migration check
 - All models are imported into the app factory so migrations detect schema changes automatically
 
 ### 7.3 Relationships & Cascade Behavior
@@ -268,7 +268,7 @@ Five SQLAlchemy ORM models were created to represent the clinic domain:
 
 ### 10.3 Double Booking, Transaction, and Timezone
 - The overlap predicate is `existing.start_at < new.end_at AND existing.end_at > new.start_at`, so adjacent ranges are allowed and partial/full intersections are rejected.
-- Creation locks the active doctor's `users` row with SQLAlchemy `with_for_update()`, performs a locking/current read of overlapping appointments, then inserts and commits under the same transaction. The current read matters because the authentication lookup may establish a REPEATABLE READ snapshot before a request waits on the doctor lock. In MySQL/InnoDB this serializes competing booking transactions for the same doctor; different doctors can proceed independently. The SQLite test database does not implement equivalent row locks, and this mitigation has not been verified with simultaneous MySQL requests.
+- Creation locks the active doctor's `users` row with SQLAlchemy `with_for_update()`, performs a locking/current read of overlapping appointments, then inserts and commits under the same transaction. In MySQL/InnoDB this serializes competing booking transactions for the same doctor; different doctors can proceed independently. PostgreSQL support has been added for deployment, but live PostgreSQL migration and concurrency behavior have not yet been verified. SQLite tests do not implement equivalent row locks.
 - Request timestamps must be ISO 8601 with an explicit offset. They are normalized to UTC, stored as naive values in existing `DATETIME` columns, and emitted as UTC ISO timestamps with `Z`. The browser formats them in local time. MySQL server/session timezone does not reinterpret the application's UTC-naive values.
 
 ### 10.4 Milestone Verification

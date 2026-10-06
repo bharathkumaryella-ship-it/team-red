@@ -68,8 +68,12 @@ def _database_uri(environment: str = "development") -> str:
 
         if parsed_url.drivername == "mysql":
             parsed_url = parsed_url.set(drivername="mysql+pymysql")
-        elif parsed_url.drivername != "mysql+pymysql":
-            raise ValueError("DATABASE_URL must use MySQL with the PyMySQL driver.")
+        elif parsed_url.drivername in {"postgres", "postgresql", "postgresql+psycopg2"}:
+            parsed_url = parsed_url.set(drivername="postgresql+psycopg")
+        elif parsed_url.drivername not in {"mysql+pymysql", "postgresql+psycopg"}:
+            raise ValueError(
+                "DATABASE_URL must use PostgreSQL or MySQL with a supported driver."
+            )
         if not all(
             (
                 parsed_url.host,

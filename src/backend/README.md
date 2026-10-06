@@ -1,13 +1,13 @@
 # MediDesk Backend — Phase 1
 
-This directory contains the Flask backend foundation. It provides an application factory, environment-driven configuration, SQLAlchemy/MySQL connectivity, a non-sensitive liveness endpoint, centralized JSON errors, security headers, restricted CORS, structured logging, and a production-oriented Docker image.
+This directory contains the Flask backend foundation. It provides an application factory, environment-driven configuration, SQLAlchemy connectivity for MySQL and PostgreSQL, a non-sensitive liveness endpoint, centralized JSON errors, security headers, restricted CORS, structured logging, and a production-oriented Docker image.
 
 No business models, migrations, authentication, or patient/appointment features are included in this phase. The health endpoint is an application liveness check and intentionally does not verify database connectivity.
 
 ## Requirements
 
 - Python 3.11+ (the Docker image uses Python 3.12)
-- MySQL 8+ for local development or deployment
+- MySQL 8+ or PostgreSQL 14+ for local development or deployment
 - Docker for container builds
 
 ## Local development
@@ -49,7 +49,7 @@ Run locally with configured environment variables:
 docker run --rm -p 5000:5000 --env-file .\src\backend\.env medidesk-backend
 ```
 
-For a public deployment, set `FLASK_ENV=production`, distinct generated `SECRET_KEY` and `JWT_SECRET_KEY` values, MySQL connection variables (or `DATABASE_URL`), and HTTPS frontend origins in `CORS_ALLOWED_ORIGINS`. The production configuration rejects placeholder/short secrets and non-HTTPS CORS origins. The container runs Gunicorn as a non-root user; do not expose Flask's development server.
+For a public deployment, set `FLASK_ENV=production`, distinct generated `SECRET_KEY` and `JWT_SECRET_KEY` values, `DATABASE_URL` (MySQL or PostgreSQL), and HTTPS frontend origins in `CORS_ALLOWED_ORIGINS`. PostgreSQL URLs are normalized to the `psycopg` driver; Render's `postgres://` and `postgresql://` forms are accepted. Production also requires a dedicated `PHI_ENCRYPTION_KEYS` value and shared persistent rate-limit storage. Apply migrations before starting Gunicorn: `flask --app run:app db upgrade && gunicorn --bind 0.0.0.0:$PORT run:app`. The production configuration rejects placeholder/short secrets and non-HTTPS CORS origins. The container runs Gunicorn as a non-root user; do not expose Flask's development server.
 
 For a MySQL instance running on the host and accessed from Docker Desktop, set `MYSQL_HOST=host.docker.internal` in the container environment. Hosted deployments should use their managed database hostname and secret store.
 
@@ -67,7 +67,7 @@ python -m pytest
 | Variable | Purpose |
 | --- | --- |
 | `FLASK_ENV` | `development`, `testing`, or `production`; defaults to development. |
-| `DATABASE_URL` | Optional MySQL SQLAlchemy URL; when set it takes precedence over `MYSQL_*`. |
+| `DATABASE_URL` | Optional MySQL or PostgreSQL SQLAlchemy URL; when set it takes precedence over `MYSQL_*`. PostgreSQL uses `postgresql+psycopg`. |
 | `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` | MySQL connection components used when `DATABASE_URL` is unset. |
 | `SECRET_KEY` | Flask signing secret; required outside tests and must be generated with at least 32 characters. |
 | `JWT_SECRET_KEY` | Reserved secret for the later authentication phase; required outside tests and must be distinct/generated. No JWT authentication is implemented here. |
