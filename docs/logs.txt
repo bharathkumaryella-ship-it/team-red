@@ -11339,3 +11339,102 @@ Files Modified / Created:
 
 Actions Taken:
 * Checked current time and wrote the requested instructions to the append-only activity log.
+
+================================================================================
+[2026-10-06T14:28:45+05:30] Configure Project for Vercel Serverless Deployment
+================================================================================
+User Prompt (verbatim):
+To deploy a combined Frontend and Python Backend on Vercel successfully, you must structure the project so Vercel understands which part is the website and which part is the backend server.
+Here is the complete, from-scratch guide to setting up your code in VS Code and deploying it to Vercel.
+1.Reorganize Your Folders in VS Code:VS Code.Vercel requires all Python backend code to be placed inside a specific folder named api.
+Open your project in VS Code.
+Create a new folder named api in the root (main) directory of your project.
+Move your main Python backend file (e.g., app.py or main.py) into this new api folder.
+Rename that Python file to index.py. Vercel automatically looks for api/index.py to start a Python backend.
+Ensure your requirements.txt file is located in the root directory, not inside the api folder.
+2.Update Your Frontend Fetch URLs:VS Code.This step fixes the "Failed to fetch" error. Since your frontend and backend will be on the exact same Vercel URL, you must remove localhost.
+Search your frontend code for the login fetch request (and any other API requests).
+Change the URL from a hardcoded local address like fetch('http://localhost:5000/login') to a relative path like fetch('/api/login').
+Save the changes.
+Verification: Check your code to ensure no http://localhost URLs remain anywhere in your frontend requests.
+3.Create a vercel.json File:VS Code.You need to tell Vercel to route all backend API requests to your Python file.
+Create a new file named vercel.json in the root directory of your project (next to package.json).
+Paste the following configuration into it:
+JSON
+{ "rewrites": [ { "source": "/api/(.*)", "destination": "/api/index.py" } ] }
+Save the file.
+4.Push Your Code to GitHub:Terminal.Send your newly structured code to your repository so Vercel can see it.
+In your VS Code terminal, add the changes: git add .
+Commit the changes: git commit -m "Configure project for Vercel serverless deployment"
+Push to GitHub: git push
+5.Configure Environment Variables:Vercel Dashboard.Give your backend permission to access the database.
+Go to your [Vercel Settings](https://vercel.com/team-red17/team-red/settings/environment-variables) and navigate to Environment Variables.
+Add your database URL:
+Key: DATABASE_URL
+Value: postgresql://medidesk_o6n3_user:6MgT4XEuiP8PRmHoadedS3ciG8wCcimk@dpg-db29hqss728c73bkrkhg-a.singapore-postgres.render.com/medidesk_o6n3
+Click Save. Delete the CORS_ALLOWED_ORIGINS variable if it is still there, as you no longer need it.
+6.Redeploy Your Project:Vercel Dashboard.Apply the new environment variables and folder structure.
+Go to the Deployments tab in Vercel.
+Click the three dots (...) next to the most recent deployment and select Redeploy.
+Wait for the status to turn green and say Ready.
+Verification: Open your live [MediDesk link](https://team-kjcdqmtct-team-red17.vercel.app/login), refresh the page, and try to log in.
+Python Frameworks on Vercel
+If you are using Flask or FastAPI, ensure your index.py file exposes the app variable correctly. Vercel's serverless environment handles the port binding automatically, so you should remove or comment out any app.run(port=5000) blocks at the bottom of your Python file.
+
+Agent Response:
+I have configured and structured the repository for Vercel combined Frontend + Python Backend serverless deployment following your complete guide:
+
+1. Reorganized Folders & Serverless WSGI Entry Point:
+   - Restored src/backend/run.py to maintain local development, Docker containers, and test suite continuity.
+   - Created api/index.py configured with sys.path dynamic resolution pointing to src/backend, exposing the WSGI app instance without blocking app.run() calls. Also mirrored this under src/frontend/api/index.py to support Vercel projects configured with src/frontend as the root directory.
+   - Added requirements.txt to the project root (and src/frontend/requirements.txt) containing the complete backend dependency set including Flask, Flask-SQLAlchemy, and psycopg[binary] for PostgreSQL.
+
+2. Updated Frontend API URLs:
+   - Updated src/frontend/lib/api.ts so apiBaseUrl defaults to an empty string (process.env.NEXT_PUBLIC_API_URL || ''), ensuring all frontend fetch requests (/api/auth/login, /api/health, etc.) use relative paths (/api/...) that resolve on the same Vercel deployment URL without any hardcoded localhost address.
+   - Hardened src/frontend/middleware.ts CSP header generator to safely handle empty or relative NEXT_PUBLIC_API_URL without throwing URI parsing errors.
+   - Hardened backend configuration and CSRF/origin enforcement (src/backend/app/config.py and src/backend/app/__init__.py) to support same-origin serverless mutations and allow omitting CORS_ALLOWED_ORIGINS.
+
+3. Created vercel.json:
+   - Configured vercel.json routing rewrites ({"rewrites": [{"source": "/api/(.*)", "destination": "/api/index.py"}]}) at both the project root and src/frontend to guarantee API traffic routes to the Python serverless function.
+
+4. Committed & Pushed to GitHub:
+   - Staged all changes and committed with: git commit -m "Configure project for Vercel serverless deployment".
+   - Pushed successfully to origin main at commit ab0464e.
+
+5. Ready for Steps 5 & 6 in Vercel:
+   - In your Vercel Dashboard Settings > Environment Variables, verify DATABASE_URL is configured.
+   - Remove CORS_ALLOWED_ORIGINS as instructed (our backend now natively supports same-origin requests).
+   - In the Deployments tab, click Redeploy to build the serverless Python functions alongside Next.js.
+
+Agent Response Summary:
+Configured Vercel serverless structure with root and frontend api/index.py WSGI entry points, root requirements.txt, and vercel.json rewrites. Converted frontend API calls to relative same-origin routes and hardened backend origin validation for Vercel. Staged, committed, and pushed changes to GitHub repository origin main.
+
+Commit SHA:
+ab0464ea0179b7b0610f6df8320aa6dc77442f43
+
+Files Modified / Created:
+* api/index.py (Created)
+* requirements.txt (Created)
+* src/frontend/api/index.py (Created)
+* src/frontend/requirements.txt (Created)
+* src/frontend/vercel.json (Created)
+* vercel.json (Created)
+* src/frontend/lib/api.ts (Modified)
+* src/frontend/middleware.ts (Modified)
+* src/backend/app/__init__.py (Modified)
+* src/backend/app/auth/routes.py (Modified)
+* src/backend/app/config.py (Modified)
+* metadata/submission.yaml (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Created api/index.py and src/frontend/api/index.py exposing WSGI app with dynamic sys.path resolution
+* Created root and frontend requirements.txt for Vercel Python runtime detection
+* Created vercel.json with /api/(.*) rewrites to /api/index.py
+* Updated src/frontend/lib/api.ts to use relative same-origin paths
+* Updated src/frontend/middleware.ts for safe relative origin handling in CSP
+* Hardened src/backend/app/config.py and src/backend/app/__init__.py for serverless same-origin deployments
+* Executed backend test suite (41/41 auth & hardening tests passed) and validated Next.js production build (npm run build)
+* Committed and pushed code to origin main (commit ab0464e)
+* Recorded submission metadata and turn log entry in docs/logs.txt
+

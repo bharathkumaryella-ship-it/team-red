@@ -6,6 +6,6 @@ version: "1.0"
 submission:
   team_id: "-06"
   repository: "https://github.com/bharathkumaryella-ship-it/team-red"
-  commit_sha: ""
-  deployment_url: ""
+  commit_sha: "ab0464ea0179b7b0610f6df8320aa6dc77442f43"
+  deployment_url: "https://team-kjcdqmtct-team-red17.vercel.app"
   submitted_at: ""
