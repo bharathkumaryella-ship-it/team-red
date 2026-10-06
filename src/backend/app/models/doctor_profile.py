@@ -16,6 +16,7 @@ class DoctorProfile(db.Model):
     license_number = db.Column(db.String(100), unique=True, nullable=False)
     experience_years = db.Column(db.Integer, nullable=True)
     bio = db.Column(db.Text, nullable=True)
+    clinic_location = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -30,6 +31,7 @@ class DoctorProfile(db.Model):
         license_number: str = "",
         experience_years: int | None = None,
         bio: str | None = None,
+        clinic_location: str | None = None,
         **kwargs,
     ):
         self.user_id = user_id
@@ -37,6 +39,7 @@ class DoctorProfile(db.Model):
         self.license_number = license_number
         self.experience_years = experience_years
         self.bio = bio
+        self.clinic_location = clinic_location
         for k, v in kwargs.items():
             setattr(self, k, v)
 

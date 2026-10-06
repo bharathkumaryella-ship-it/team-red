@@ -24,7 +24,9 @@ type RecordItem = {
   diagnosis: string;
   notes: string | null;
   prescription: string | null;
-  patient: { id: number; full_name: string };
+  weight_kg: number | null;
+  patient_age: number | null;
+  patient: { id: number; full_name: string; age: number | null };
 };
 
 type RecordListing = { data: RecordItem[]; pagination: { page: number; pages: number; total: number } };
@@ -32,11 +34,22 @@ type RecordListing = { data: RecordItem[]; pagination: { page: number; pages: nu
 export default function DoctorMedicalRecordsPage() {
   const [records, setRecords] = useState<RecordListing | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState('');
+  const [patientName, setPatientName] = useState('');
+  const [patientAge, setPatientAge] = useState('');
   const [selected, setSelected] = useState<RecordItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { success, error: showError } = useToast();
+  const selectedAppointment = appointments.find((item) => String(item.id) === selectedAppointmentId);
+
+  function selectPatientByName(name: string) {
+    setPatientName(name);
+    const match = appointments.find((item) => item.patient?.full_name.toLowerCase() === name.trim().toLowerCase());
+    setSelectedAppointmentId(match ? String(match.id) : '');
+    setPatientAge(match?.patient?.age == null ? '' : String(match.patient.age));
+  }
 
   async function load() {
     setLoading(true);
@@ -67,13 +80,18 @@ export default function DoctorMedicalRecordsPage() {
       await apiRequest('/medical-records', {
         method: 'POST',
         body: {
-          appointment_id: Number(form.get('appointment_id')),
+          appointment_id: Number(selectedAppointmentId),
           diagnosis: form.get('diagnosis'),
           notes: form.get('notes'),
           prescription: form.get('prescription'),
+          weight_kg: form.get('weight_kg') === '' ? null : Number(form.get('weight_kg')),
+          patient_age: form.get('patient_age') === '' ? null : Number(form.get('patient_age')),
         },
       });
       event.currentTarget.reset();
+      setSelectedAppointmentId('');
+      setPatientName('');
+      setPatientAge('');
       success('Clinical record created successfully.');
       await load();
     } catch (e) {
@@ -104,6 +122,8 @@ export default function DoctorMedicalRecordsPage() {
           diagnosis: form.get('diagnosis'),
           notes: form.get('notes'),
           prescription: form.get('prescription'),
+          weight_kg: form.get('weight_kg') === '' ? null : Number(form.get('weight_kg')),
+          patient_age: form.get('patient_age') === '' ? null : Number(form.get('patient_age')),
         },
       });
       setSelected(result.data);
@@ -158,6 +178,18 @@ export default function DoctorMedicalRecordsPage() {
           <div className="card-body">
             {selected ? (
               <form className="stacked-form" onSubmit={update}>
+                <div className="card" style={{ background: 'var(--color-primary-light)' }}>
+                  <div className="card-body">
+                    <label>
+                      <span className="form-label">Patient Name</span>
+                      <input value={selected.patient.full_name} readOnly />
+                    </label>
+                    <label style={{ display: 'block', marginTop: '12px' }}>
+                      <span className="form-label">Patient Age</span>
+                      <input name="patient_age" type="number" min="0" max="130" step="1" required defaultValue={selected.patient_age ?? selected.patient.age ?? ''} placeholder="Enter age in years" />
+                    </label>
+                  </div>
+                </div>
                 <div>
                   <label>
                     <span className="form-label">Clinical Diagnosis *</span>
@@ -168,6 +200,13 @@ export default function DoctorMedicalRecordsPage() {
                       rows={3}
                       defaultValue={selected.diagnosis}
                     />
+                  </label>
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">Patient Weight (kg)</span>
+                    <input name="weight_kg" type="number" min="0.1" max="500" step="0.1" defaultValue={selected.weight_kg ?? ''} placeholder="e.g. 68.5" />
                   </label>
                 </div>
 
@@ -221,25 +260,52 @@ export default function DoctorMedicalRecordsPage() {
               <form className="stacked-form" onSubmit={create}>
                 <div>
                   <label>
-                    <span className="form-label">Completed Consultation *</span>
-                    <select name="appointment_id" required defaultValue="">
-                      <option value="" disabled>
-                        {appointments.length === 0
-                          ? 'No pending completed consultations require records'
-                          : '-- Choose completed consultation --'}
-                      </option>
-                      {appointments.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          #{item.id} · {item.patient?.full_name || 'Patient'} · {new Date(item.start_at).toLocaleDateString()}
-                        </option>
+                    <span className="form-label">Patient Name *</span>
+                    <input
+                      name="patient_name"
+                      required
+                      list="eligible-patients"
+                      value={patientName}
+                      onChange={(event) => selectPatientByName(event.target.value)}
+                      placeholder="Enter patient name"
+                      autoComplete="off"
+                    />
+                    <datalist id="eligible-patients">
+                      {[...new Set(appointments.map((item) => item.patient?.full_name).filter((name): name is string => Boolean(name)))].map((name) => (
+                        <option key={name} value={name} />
                       ))}
-                    </select>
+                    </datalist>
                   </label>
                   {appointments.length === 0 && (
                     <span className="text-xs text-muted" style={{ display: 'block', marginTop: '4px' }}>
                       To create a record, complete a consultation under your Schedule first.
                     </span>
                   )}
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">Patient Age</span>
+                    <input
+                      name="patient_age"
+                      type="number"
+                      required
+                      min="0"
+                      max="130"
+                      step="1"
+                      value={patientAge}
+                      onChange={(event) => setPatientAge(event.target.value)}
+                      placeholder={selectedAppointment ? 'Enter age in years' : 'Enter or select a patient first'}
+                    />
+                  </label>
+                  <span className="text-xs text-muted">Age is filled from the patient profile when available and can be corrected for this visit.</span>
+                </div>
+
+                <div>
+                  <label>
+                    <span className="form-label">Patient Weight (kg)</span>
+                    <input name="weight_kg" type="number" min="0.1" max="500" step="0.1" placeholder="e.g. 68.5" />
+                  </label>
                 </div>
 
                 <div>
@@ -284,7 +350,7 @@ export default function DoctorMedicalRecordsPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                   <button
                     type="submit"
-                    disabled={saving || !appointments.length}
+                    disabled={saving || !selectedAppointment}
                     className={`btn btn-primary ${saving ? 'btn-loading' : ''}`}
                   >
                     <Save size={16} />
@@ -379,6 +445,9 @@ export default function DoctorMedicalRecordsPage() {
                       }}
                     >
                       {r.diagnosis}
+                    </p>
+                    <p className="text-xs text-muted" style={{ margin: '4px 0' }}>
+                      Age: {r.patient.age ?? 'Not provided'}{r.weight_kg !== null ? ` · Weight: ${r.weight_kg} kg` : ''}
                     </p>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>

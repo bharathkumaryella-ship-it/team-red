@@ -10347,3 +10347,451 @@ Actions Taken:
 * Updated src/frontend/app/login/page.tsx with 1-click demo fill buttons.
 * Committed cb64221 and pushed to origin/main.
 * Appended turn entry to docs/logs.txt.
+
+================================================================================
+[2026-10-06T08:25:37+05:30] Improve Patient Booking, Clinic Location, Records, and Reminders
+================================================================================
+User Prompt (verbatim):
+there is a problem in patient dashboard. In find Doctor section patient find a  doctor and click on book visit it s open a book visit section but in that why patient need to fill specalist ,doctor. thepoint is user already selected the doctor from find doctor so we did not need . book visit be like when patient open find doctor section  nad click on book doctor then open a book an appiontment page . i did not want seperate section in feature . we want to add a location of clinic. i n medical records section i want two more records with more matter. i want notifications to send  patients that there is appiontment in next 1 hr
+
+Agent Response:
+I’m updating the doctor directory so Book Visit passes the selected doctor into the appointment page, simplifying booking to that doctor and appointment details. I’m adding clinic location to doctor profiles and appointment details, expanding the seeded patient record examples with two detailed entries, and adding patient in-app reminders for appointments starting within one hour. Reminders will be generated in the signed-in patient dashboard session from the existing appointment API; they are in-app notices, not SMS or email delivery.
+
+Agent Response Summary:
+This turn implements the requested patient booking, clinic location, medical record, and appointment reminder improvements using the existing Flask API and Next.js app. Existing authorization and encrypted medical-record storage remain in place. Changes and validation details will be recorded in this log entry.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* Pending implementation.
+
+Actions Taken:
+* Reviewed repository instructions, onboarding record, architecture notes, doctor and appointment routes, data models, profile forms, and patient views.
+* Began implementing the requested patient workflow improvements.
+
+================================================================================
+[2026-10-06T08:28:44+05:30] Completion and Prompt Log Correction
+================================================================================
+Correction: The preceding turn entry paraphrased one phrase in the verbatim prompt. The exact user prompt for this turn is:
+there is a problem in patient dashboard. In find Doctor section patient find a  doctor and click on book visit it s open a book visit section but in that why patient need to fill specalist ,doctor. thepoint is user already selected the doctor from find doctor so we did not need . book visit be like when patient open find doctor section  nad click on book visit then open a book an appiontment page . i did not want seperate section in feature . we want to add a location of clinic. i n medical records section i want two more records with more matter. i want notifications to send  patients that there is appiontment in next 1 hr
+
+Agent Response:
+Updated patient booking so Book Visit passes the selected doctor and opens a focused appointment scheduling page without asking the patient to select a doctor or specialty again. Added clinic location to doctor profile management, directory and booking details, and appointment summaries. Added two detailed synthetic medical-record examples to demo seed data and patient in-app reminders that check for upcoming appointments within one hour while the patient is signed in.
+
+Agent Response Summary:
+The requested UI and data changes are implemented. The clinic-location migration is new and additive. Reminder delivery is limited to in-app notices during an active signed-in patient session; this implementation does not send SMS or email. `git diff --check` reported no whitespace errors; automated tests were not run.
+
+Commit SHA:
+Not recorded: the workspace denies writing `.git/index.lock`, so Git staging/commit could not proceed.
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+* src/backend/app/models/doctor_profile.py (Modified)
+* src/backend/app/routes/doctors.py (Modified)
+* src/backend/app/seeds.py (Modified)
+* src/backend/app/services/appointment_management.py (Modified)
+* src/backend/app/services/management.py (Modified)
+* src/backend/migrations/versions/71d82c5a0b46_add_doctor_clinic_location.py (Created)
+* src/frontend/app/components/app-shell.tsx (Modified)
+* src/frontend/app/components/toast-provider.tsx (Modified)
+* src/frontend/app/doctor/profile/page.tsx (Modified)
+* src/frontend/app/patient/appointments/page.tsx (Modified)
+* src/frontend/app/patient/book-appointment/page.tsx (Modified)
+* src/frontend/app/patient/dashboard/page.tsx (Modified)
+* src/frontend/app/patient/doctors/[doctorId]/page.tsx (Modified)
+* src/frontend/app/patient/doctors/page.tsx (Modified)
+* src/frontend/lib/appointments.ts (Modified)
+
+Actions Taken:
+* Added clinic_location schema, API validation and serialization, doctor profile editor, and patient-visible locations.
+* Changed Book Visit links to carry doctorId and removed the duplicate doctor search and selection controls from appointment scheduling.
+* Added two detailed synthetic sample medical records to the demo seeder.
+* Added a once-per-appointment in-app reminder when an appointment is within one hour; check repeats every minute during a patient session.
+* Ran `git diff --check`; did not run tests.
+* Attempted Git restore of an incidental migration whitespace-only change; Git could not create `.git/index.lock` due workspace permissions.
+
+================================================================================
+[2026-10-06T08:46:15+05:30] Make Clinic Location Prominent on Appointment Booking
+================================================================================
+User Prompt (verbatim):
+show location of clinic in book an appointment
+
+Agent Response:
+Made clinic location a prominent, dedicated section in the appointment form with a map-pin icon, and repeated it in the selected doctor details card. When the doctor has not entered a clinic address, the page now clearly says so instead of hiding the section.
+
+Agent Response Summary:
+Updated the booking page to display the selected doctor's clinic location clearly. The empty-location fallback helps explain when a clinic address is not available in the doctor's profile.
+
+Commit SHA:
+Not recorded: Git metadata writes are blocked by workspace permissions (`.git/index.lock`).
+
+Files Modified / Created:
+* src/frontend/app/patient/book-appointment/page.tsx (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Read AGENTS.md and checked the existing onboarding record.
+* Updated appointment booking UI to prominently show clinic location and an explicit missing-address state.
+* Did not run tests.
+
+================================================================================
+[2026-10-06T08:47:33+05:30] Ensure Two Detailed Records Appear for Existing Demo Patient
+================================================================================
+User Prompt (verbatim):
+add two more medical records with some more matter
+
+Agent Response:
+The two detailed records were added to the demo seed list earlier, but that seeder only runs when the database has no users, so an already initialized database would not show them. I’m adding an additive data migration that inserts these two synthetic records for the existing `patient1@demo.local` account and encrypts their clinical text with the configured PHI encryption keys. Fresh databases will continue to receive the same records through the seeder.
+
+Agent Response Summary:
+This change addresses why existing demo databases did not show the records: seed data is only created on first startup. The migration will add the two detailed synthetic records to existing demo data while using the project’s encrypted-text helper for protected clinical fields.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* Pending implementation.
+
+Actions Taken:
+* Read AGENTS.md, confirmed onboarding is recorded, and inspected seed startup conditions, medical-record ownership filtering, model encryption, and migration chain.
+
+================================================================================
+[2026-10-06T08:48:11+05:30] Existing Demo Database Receives Two Detailed Records
+================================================================================
+User Prompt (verbatim):
+add two more medical records with some more matter
+
+Agent Response:
+Added a migration for existing demo databases that creates two detailed synthetic medical records for `patient1@demo.local`. The diagnosis, notes, and prescription are encrypted through the app's configured PHI encryption helper before insertion. Fresh demo databases still receive the same examples from the development seed data.
+
+Agent Response Summary:
+The records will now be available after the app applies migrations, including when its demo users already exist and the initial seeder therefore does not run. Missing demo users cause the migration to safely skip insertion; fresh development seeding supplies the examples afterward. `git diff --check` passed; tests were not run.
+
+Commit SHA:
+Not recorded: previous Git metadata write attempt failed because workspace permissions denied creation of `.git/index.lock`.
+
+Files Modified / Created:
+* src/backend/migrations/versions/8a3c1d7e4f20_add_demo_patient_records.py (Created)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added one-time migration to find the demo patient and doctors and insert two encrypted synthetic records.
+* Kept fresh-database sample records in the existing development seeder.
+* Ran `git diff --check`; did not run tests.
+
+================================================================================
+[2026-10-06T08:50:52+05:30] Populate Hyderabad Demo Clinics and Show Doctor Phone in Appointments
+================================================================================
+User Prompt (verbatim):
+**The clinic has not added a location yet.**   not like some clinic names with location from hyderabad . in appointments section add phone number of doctor 
+
+Agent Response:
+I’ll populate all demo doctor profiles with clearly named MediDesk clinic locations in Hyderabad, and add an upgrade migration to backfill existing demo profiles rather than leaving their location blank. I’ll also include the doctor’s phone in patient-owned appointment responses and display it as a callable number in the appointments list and detail view.
+
+Agent Response Summary:
+This change updates both fresh demo data and existing demo databases with sample Hyderabad clinic locations. Appointment phone exposure will be limited to the authenticated patient’s own appointment response; doctor phone values remain encrypted in storage.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* Pending implementation.
+
+Actions Taken:
+* Read AGENTS.md, confirmed onboarding, and inspected doctor profile seed data, appointment serialization, and patient appointments UI.
+
+================================================================================
+[2026-10-06T08:51:43+05:30] Add Hyderabad Demo Clinic Locations and Doctor Phone to Appointments
+================================================================================
+User Prompt (verbatim):
+**The clinic has not added a location yet.**   not like some clinic names with location from hyderabad . in appointments section add phone number of doctor 
+
+Agent Response:
+Added named MediDesk demo clinic addresses across Hyderabad to all eight seeded doctors and added a migration to populate those locations for existing demo doctor profiles. Patient appointment API responses now include the doctor's phone, and the patient appointments list and detail modal show a clickable `tel:` link. Doctor phone is included only in patient appointment responses scoped to the authenticated patient's own appointments.
+
+Agent Response Summary:
+Demo doctors now have non-empty clinic names and Hyderabad neighborhood addresses, including existing demo databases after migration. Patient appointment views now display the corresponding doctor's phone. These are sample MediDesk demo locations, not verified real clinic listings. `git diff --check` identified only whitespace at the end of the verbatim prompt preserved in this log; automated tests were not run.
+
+Commit SHA:
+Not recorded: Git metadata writes are blocked by workspace permissions (`.git/index.lock`).
+
+Files Modified / Created:
+* src/backend/app/seeds.py (Modified)
+* src/backend/app/services/appointment_management.py (Modified)
+* src/backend/migrations/versions/b12e6f0a93cd_populate_demo_clinics.py (Created)
+* src/frontend/lib/appointments.ts (Modified)
+* src/frontend/app/patient/appointments/page.tsx (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added Hyderabad demo addresses for all doctor profile seed rows.
+* Added migration to update existing demo doctor profiles with named sample clinic locations.
+* Added doctor phone to patient-only appointment serialization.
+* Rendered phone number in patient appointments list and details as a callable link.
+* Ran `git diff --check`; the only reported trailing whitespace is part of the verbatim user prompt in this log. Did not run tests.
+
+================================================================================
+[2026-10-06T08:55:20+05:30] Replace End-Time Input with 30-Minute Appointment Slots
+================================================================================
+User Prompt (verbatim):
+remove preferred end time and the time selection should be like 30 minutes for each . the patient should see like slots 100: 00, 10:30
+
+Agent Response:
+I’m replacing the free-form start and end datetime inputs with a date picker and selectable 30-minute slots from 09:00 through 17:30, including times such as 10:00 and 10:30. The appointment duration will be fixed at 30 minutes; the end time will be calculated for the existing availability and booking API without being shown as a separate field.
+
+Agent Response Summary:
+This update keeps the current server booking contract while making patients choose discrete half-hour start slots. Changing the date or slot resets the previous availability result.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* Pending implementation.
+
+Actions Taken:
+* Read AGENTS.md, confirmed onboarding, and inspected the patient booking page and its existing availability and booking request fields.
+
+================================================================================
+[2026-10-06T08:56:07+05:30] Half-Hour Appointment Slots with Automatic End Time
+================================================================================
+User Prompt (verbatim):
+remove preferred end time and the time selection should be like 30 minutes for each . the patient should see like slots 100: 00, 10:30
+
+Agent Response:
+Replaced the two free-form date/time inputs with an appointment date picker and selectable half-hour slots from 09:00 to 17:30 (for example, 10:00 and 10:30). The booking and availability requests now derive the appointment end as 30 minutes after the chosen start slot. The end time is no longer a patient-editable field and is shown only as an informational calculated time.
+
+Agent Response Summary:
+The patient booking UI now offers discrete 30-minute start slots and computes the 30-minute end time automatically, preserving the existing backend booking and availability API. Changing either date or slot clears the previous availability result. `git diff --check` reports only trailing whitespace in earlier verbatim prompts within docs/logs.txt; no tests were run.
+
+Commit SHA:
+Not recorded: Git metadata writes are blocked by workspace permissions (`.git/index.lock`).
+
+Files Modified / Created:
+* src/frontend/app/patient/book-appointment/page.tsx (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added half-hour options from 09:00 through 17:30 and a separate date picker.
+* Calculate and submit end_at as start time plus 30 minutes.
+* Removed the patient-editable end-time field.
+* Reviewed matching fields and ran `git diff --check`; did not run tests.
+
+================================================================================
+[2026-10-06T08:58:05+05:30] Show Patient Name, Age, and Weight for Completed Consultations
+================================================================================
+User Prompt (verbatim):
+now in doctors page . in medical record there is completed consultation inthat place add nmae of patient ,age , weight 
+
+Agent Response:
+I’m updating the doctor’s medical-record workflow so completed consultations identify the patient by name and age when selected. I’ll add a weight-in-kilograms field to new and edited medical records, persist it encrypted, and expose the saved weight in medical-record details.
+
+Agent Response Summary:
+Patient name and age come from the selected completed appointment and the patient profile date of birth. Weight will be recorded with the clinical record and stored using the existing encrypted-text mechanism for sensitive medical information.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* Pending implementation.
+
+Actions Taken:
+* Read AGENTS.md, confirmed onboarding, and inspected doctor medical-record UI, appointment serialization, patient profile DOB, and medical-record model/API.
+
+================================================================================
+[2026-10-06T09:00:44+05:30] Add Patient Identity and Weight to Doctor Medical Records
+================================================================================
+User Prompt (verbatim):
+now in doctors page . in medical record there is completed consultation inthat place add nmae of patient ,age , weight 
+
+Agent Response:
+Updated the doctor’s medical-record workflow to show the selected patient’s name and age for completed consultations, including while creating and editing records. Added an optional weight-in-kilograms field, persisted with the medical record using encrypted text storage. The doctor can review age and saved weight in authored records, and patients can see their recorded weight in their own medical-record views.
+
+Agent Response Summary:
+Age is calculated from the patient’s encrypted date of birth and is exposed only on appointments/records the assigned doctor is authorized to view. Weight is validated to 0.1–500 kg, encrypted at rest, and stored through a new migration. `git diff --check` reports only prior verbatim prompt whitespace in docs/logs.txt; tests were not run.
+
+Commit SHA:
+Not recorded: Git metadata writes remain blocked by workspace permissions (`.git/index.lock`).
+
+Files Modified / Created:
+* src/backend/app/models/medical_record.py (Modified)
+* src/backend/app/routes/medical_records.py (Modified)
+* src/backend/app/services/appointment_management.py (Modified)
+* src/backend/migrations/versions/c49d8321f60a_add_encrypted_record_weight.py (Created)
+* src/frontend/lib/appointments.ts (Modified)
+* src/frontend/app/doctor/medical-records/page.tsx (Modified)
+* src/frontend/app/patient/medical-records/page.tsx (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added age calculation to assigned doctor appointment and medical-record responses.
+* Added optional validated weight input to create/edit flows and encrypted model persistence.
+* Added migration for the encrypted weight column.
+* Displayed patient details and weight in doctor and patient medical-record views.
+* Ran `git diff --check`; did not run tests.
+
+================================================================================
+[2026-10-06T09:02:26+05:30] Replace Consultation Picker Label with Patient Name and Age
+================================================================================
+User Prompt (verbatim):
+remove completed consultation and add name and age of patient
+
+Agent Response:
+I’m replacing the “Completed Consultation” control label with a patient name and age selector. Each choice will show the patient’s name, age, and appointment date, and the selected patient’s name and age will remain visible in the details card. The record will continue to use the linked appointment ID behind the scenes for authorization and record assignment.
+
+Agent Response Summary:
+This makes the doctor-facing form focus on identifying the patient while retaining the backend’s completed-appointment authorization checks. No patient name or age will be manually entered or trusted from the browser.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* Pending implementation.
+
+Actions Taken:
+* Read AGENTS.md, confirmed onboarding, and reviewed the completed-consultation selector and selected-patient details in the doctor medical-record form.
+
+================================================================================
+[2026-10-06T09:02:49+05:30] Patient Selector Shows Name and Age
+================================================================================
+User Prompt (verbatim):
+remove completed consultation and add name and age of patient
+
+Agent Response:
+Changed the doctor medical-record form’s “Completed Consultation” label to “Patient Name & Age.” Patient choices now show the patient’s name, age, and consultation date, with the selected patient’s name and age shown in the details card. The form continues to submit the associated appointment ID so the API can enforce the doctor’s assigned completed-appointment relationship.
+
+Agent Response Summary:
+The completed-consultation wording was removed from the selection control and replaced with a patient-focused name and age selector. The authorized appointment association remains internal to preserve record ownership and backend authorization. `git diff --check` reports only trailing whitespace from earlier verbatim prompts in docs/logs.txt; tests were not run.
+
+Commit SHA:
+Not recorded: Git metadata writes remain blocked by workspace permissions (`.git/index.lock`).
+
+Files Modified / Created:
+* src/frontend/app/doctor/medical-records/page.tsx (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Renamed the patient selection label and option prompt.
+* Added each available patient’s age and appointment date to selector options.
+* Reviewed the resulting selector and ran `git diff --check`; did not run tests.
+
+================================================================================
+[2026-10-06T09:07:39+05:30] Use Separate Patient Name and Age Fields
+================================================================================
+User Prompt (verbatim):
+i want like enter patient name , in another ox enter age  it should be like remaining sections
+
+Agent Response:
+Replaced the patient dropdown with a separate Patient Name text field and Patient Age number field styled like the other form controls. The name field offers matching patients who have an eligible completed appointment; choosing a match links the form to its appointment. Age is prefilled from the patient profile when available, can be corrected for the visit, and is saved as an encrypted age-at-consultation snapshot.
+
+Agent Response Summary:
+The doctor-facing form now uses separate name and age inputs instead of a combined selector. A patient must match an authorized completed appointment before the record can be created; this keeps patient identity and appointment ownership tied to backend data. `git diff --check` reports prior verbatim prompt whitespace in docs/logs.txt; tests were not run.
+
+Commit SHA:
+Not recorded: Git metadata writes remain blocked by workspace permissions (`.git/index.lock`).
+
+Files Modified / Created:
+* src/frontend/app/doctor/medical-records/page.tsx (Modified)
+* src/backend/app/models/medical_record.py (Modified)
+* src/backend/app/routes/medical_records.py (Modified)
+* src/backend/migrations/versions/d5809a6c1f32_add_patient_age_snapshot.py (Created)
+* src/frontend/app/patient/medical-records/page.tsx (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Replaced patient selector with a name text field using suggestions from eligible assigned patients and a separate age input.
+* Prefilled age when profile DOB is available while allowing a corrected age-at-visit value.
+* Added encrypted patient_age persistence, validation, migration, and patient-facing record display.
+* Ran `git diff --check`; did not run tests.
+
+================================================================================
+[2026-10-06T09:12:19+05:30] Add Patient Appointment Notification Bell with Doctor and Clinic
+================================================================================
+User Prompt (verbatim):
+notifications symbol in patient feature , in that patient recieve that he as a  appiont wit doctor name , location 
+
+Agent Response:
+I’m adding a patient-only notification bell in the top navigation. It will show appointments starting within the next hour with the doctor’s name, clinic location, and appointment time, using the existing patient appointment API and one-hour reminder window.
+
+Agent Response Summary:
+The notification control will expose the already requested in-app appointment reminders in a persistent, visible panel as well as the toast. Appointment data remains scoped to the signed-in patient by the existing API.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* Pending implementation.
+
+Actions Taken:
+* Read AGENTS.md, confirmed onboarding, and inspected the existing reminder polling, top navbar, toast provider, and appointment serialization.
+
+================================================================================
+[2026-10-06T09:13:19+05:30] Add Patient Bell Notifications for Upcoming Appointment Details
+================================================================================
+User Prompt (verbatim):
+notifications symbol in patient feature , in that patient recieve that he as a  appiont wit doctor name , location 
+
+Agent Response:
+Added a patient-only bell icon to the top navigation with a badge for appointments starting within one hour. Opening it shows each appointment’s doctor name, scheduled time, and clinic location; selecting a reminder opens the patient appointments page. The existing toast reminder now also includes the clinic location when available.
+
+Agent Response Summary:
+Patient appointment reminders are visible in both the bell panel and the existing toast, using the existing patient-scoped appointments endpoint and one-hour reminder window. The panel states when no appointments start within the next hour and handles failed reminder lookups without leaving an endless loading indicator. `git diff --check` reports only trailing whitespace from verbatim prompts already preserved in docs/logs.txt; tests were not run.
+
+Commit SHA:
+Not recorded: Git metadata writes remain blocked by workspace permissions (`.git/index.lock`).
+
+Files Modified / Created:
+* src/frontend/app/components/app-shell.tsx (Modified)
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Added a bell control, appointment count badge, and dropdown panel visible only to patients.
+* Displayed upcoming doctor name, appointment time, and clinic location in notifications.
+* Included clinic location in one-hour toast reminders.
+* Reviewed the rendered JSX and ran `git diff --check`; did not run tests.
+
+================================================================================
+[2026-10-06T09:15:17+05:30] Stage, Commit, and Push Pending Project Changes
+================================================================================
+User Prompt (verbatim):
+push changes to git
+
+Agent Response:
+I inspected the pending worktree changes and confirmed the current branch is `main` with `origin` set to the team repository. I’m staging the accumulated patient booking, clinic location, medical-record, and notification changes, then I’ll commit and push them to `origin/main`.
+
+Agent Response Summary:
+The worktree contains uncommitted feature changes from the recent patient and doctor workflow requests. The target remote is the configured team repository; Git metadata writes previously failed under the workspace’s restricted `.git` permissions, so I’m requesting elevated access to complete the explicitly requested push.
+
+Commit SHA:
+Pending
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+* src/backend/app/models/doctor_profile.py (Modified)
+* src/backend/app/models/medical_record.py (Modified)
+* src/backend/app/routes/doctors.py (Modified)
+* src/backend/app/routes/medical_records.py (Modified)
+* src/backend/app/seeds.py (Modified)
+* src/backend/app/services/appointment_management.py (Modified)
+* src/backend/app/services/management.py (Modified)
+* src/backend/migrations/versions/71d82c5a0b46_add_doctor_clinic_location.py (Created)
+* src/backend/migrations/versions/8a3c1d7e4f20_add_demo_patient_records.py (Created)
+* src/backend/migrations/versions/b12e6f0a93cd_populate_demo_clinics.py (Created)
+* src/backend/migrations/versions/c49d8321f60a_add_encrypted_record_weight.py (Created)
+* src/backend/migrations/versions/d5809a6c1f32_add_patient_age_snapshot.py (Created)
+* src/frontend/app/components/app-shell.tsx (Modified)
+* src/frontend/app/components/toast-provider.tsx (Modified)
+* src/frontend/app/doctor/medical-records/page.tsx (Modified)
+* src/frontend/app/doctor/profile/page.tsx (Modified)
+* src/frontend/app/patient/appointments/page.tsx (Modified)
+* src/frontend/app/patient/book-appointment/page.tsx (Modified)
+* src/frontend/app/patient/dashboard/page.tsx (Modified)
+* src/frontend/app/patient/doctors/[doctorId]/page.tsx (Modified)
+* src/frontend/app/patient/doctors/page.tsx (Modified)
+* src/frontend/app/patient/medical-records/page.tsx (Modified)
+* src/frontend/lib/appointments.ts (Modified)
+
+Actions Taken:
+* Read AGENTS.md and verified onboarding is complete.
+* Checked worktree, branch, remote URL, and latest commit.
+* Preparing to stage, commit, and push to origin/main.

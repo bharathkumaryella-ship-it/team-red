@@ -21,6 +21,7 @@ type Doctor = {
   specialization: string;
   experience_years: number | null;
   bio: string | null;
+  clinic_location: string | null;
 };
 
 export default function DoctorDirectoryDetailPage() {
@@ -157,8 +158,9 @@ export default function DoctorDirectoryDetailPage() {
                   doctor.full_name +
                   ' is a committed medical practitioner at MediDesk, specializing in high-standard patient diagnostics, individualized care routines, and preventive healthcare strategies.'}
             </p>
+            {doctor.clinic_location && <div className="card" style={{ marginBottom: '20px' }}><div className="card-body"><strong>Clinic location</strong><p style={{ margin: '4px 0 0' }}>{doctor.clinic_location}</p></div></div>}
 
-            <Link href="/patient/book-appointment" className="btn btn-primary btn-lg btn-full">
+            <Link href={`/patient/book-appointment?doctorId=${doctor.id}`} className="btn btn-primary btn-lg btn-full">
               <CalendarDays size={18} />
               <span>Schedule Consultation with Dr. {doctor.full_name}</span>
             </Link>

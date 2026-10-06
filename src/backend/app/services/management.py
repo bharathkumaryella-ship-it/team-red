@@ -45,6 +45,7 @@ def doctor_data(user: User, *, include_account: bool = False) -> dict:
         "specialization": profile.specialization if profile else "",
         "experience_years": profile.experience_years if profile else None,
         "bio": profile.bio if profile else None,
+        "clinic_location": profile.clinic_location if profile else None,
     }
     if include_account:
         result.update(email=user.email, phone=user.phone, license_number=profile.license_number if profile else None, is_active=user.is_active)

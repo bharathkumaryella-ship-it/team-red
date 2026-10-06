@@ -7,8 +7,8 @@ export type Appointment = {
   status: AppointmentStatus;
   reason?: string | null;
   created_at: string;
-  doctor: { id: number; full_name: string; specialization: string | null };
-  patient?: { id: number; full_name: string };
+  doctor: { id: number; full_name: string; specialization: string | null; clinic_location?: string | null; phone?: string | null };
+  patient?: { id: number; full_name: string; age?: number | null };
 };
 
 export type AppointmentListing = {

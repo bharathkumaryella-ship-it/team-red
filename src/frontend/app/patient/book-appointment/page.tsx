@@ -2,41 +2,36 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api';
 import { Appointment } from '@/lib/appointments';
 import { useToast } from '../../components/toast-provider';
-import {
-  CalendarDays,
-  Clock,
-  Search,
-  CheckCircle,
-  AlertCircle,
-  User,
-  ShieldCheck,
-  ArrowRight,
-  Info,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import { CalendarDays, Clock, CheckCircle, AlertCircle, User, ShieldCheck, ArrowRight, Info, MapPin } from 'lucide-react';
 
-type Doctor = { id: number; full_name: string; specialization: string; experience_years: number | null };
-type Doctors = { data: Doctor[]; pagination: { page: number; pages: number; total: number } };
+type Doctor = { id: number; full_name: string; specialization: string; experience_years: number | null; clinic_location: string | null };
 type AppointmentResult = { data: Appointment };
 type Availability = { data: { available: boolean } };
 
-function asApiInstant(value: string) {
-  return value ? new Date(value).toISOString() : '';
+const APPOINTMENT_TIME_SLOTS = Array.from({ length: 18 }, (_, index) => {
+  const totalMinutes = 9 * 60 + index * 30;
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const minutes = String(totalMinutes % 60).padStart(2, '0');
+  return `${hours}:${minutes}`;
+});
+
+function localInputValue(value: Date) {
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
 }
 
 export default function BookAppointmentPage() {
   const router = useRouter();
   const { success, error: showError } = useToast();
 
-  const [doctorList, setDoctorList] = useState<Doctors | null>(null);
-  const [doctorQuery, setDoctorQuery] = useState('');
-  const [doctorPage, setDoctorPage] = useState(1);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [doctorId, setDoctorId] = useState('');
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
   const [startAt, setStartAt] = useState('');
   const [endAt, setEndAt] = useState('');
   const [reason, setReason] = useState('');
@@ -45,19 +40,33 @@ export default function BookAppointmentPage() {
   const [booking, setBooking] = useState(false);
   const [result, setResult] = useState<Appointment | null>(null);
 
-  const loadDoctors = useCallback(async (search: string, page: number) => {
-    try {
-      const params = new URLSearchParams({ search, limit: '20', page: String(page) });
-      const data = await apiRequest<Doctors>(`/doctors?${params}`);
-      setDoctorList(data);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : 'Unable to load doctors.');
+  function updateAppointmentSlot(date: string, time: string) {
+    setAppointmentDate(date);
+    setAppointmentTime(time);
+    setAvailable(null);
+    if (!date || !time) {
+      setStartAt('');
+      setEndAt('');
+      return;
     }
-  }, [showError]);
+    const start = new Date(`${date}T${time}:00`);
+    if (Number.isNaN(start.getTime())) {
+      setStartAt('');
+      setEndAt('');
+      return;
+    }
+    setStartAt(localInputValue(start));
+    setEndAt(localInputValue(new Date(start.getTime() + 30 * 60 * 1000)));
+  }
 
   useEffect(() => {
-    void loadDoctors('', 1);
-  }, [loadDoctors]);
+    const id = new URLSearchParams(window.location.search).get('doctorId');
+    if (!id || !/^\d+$/.test(id)) { router.replace('/patient/doctors'); return; }
+    setDoctorId(id);
+    apiRequest<{ data: Doctor }>(`/doctors/${id}`)
+      .then((response) => setSelectedDoctor(response.data))
+      .catch((e) => showError(e instanceof Error ? e.message : 'Unable to load selected doctor.'));
+  }, [router, showError]);
 
   async function checkAvailability() {
     if (!doctorId || !startAt || !endAt) return;
@@ -66,8 +75,8 @@ export default function BookAppointmentPage() {
     try {
       const params = new URLSearchParams({
         doctor_id: doctorId,
-        start_at: asApiInstant(startAt),
-        end_at: asApiInstant(endAt)
+        start_at: new Date(startAt).toISOString(),
+        end_at: new Date(endAt).toISOString()
       });
       const response = await apiRequest<Availability>(`/appointments/availability?${params}`);
       setAvailable(response.data.available);
@@ -93,8 +102,8 @@ export default function BookAppointmentPage() {
         method: 'POST',
         body: {
           doctor_id: Number(doctorId),
-          start_at: asApiInstant(startAt),
-          end_at: asApiInstant(endAt),
+          start_at: new Date(startAt).toISOString(),
+          end_at: new Date(endAt).toISOString(),
           reason
         }
       });
@@ -107,14 +116,6 @@ export default function BookAppointmentPage() {
       setBooking(false);
     }
   }
-
-  async function searchDoctors(event: FormEvent) {
-    event.preventDefault();
-    setDoctorPage(1);
-    await loadDoctors(doctorQuery, 1);
-  }
-
-  const selectedDoctor = doctorList?.data.find((d) => String(d.id) === doctorId);
 
   return (
     <div className="page-container">
@@ -174,121 +175,50 @@ export default function BookAppointmentPage() {
             <h3>Consultation Request Details</h3>
           </div>
           <div className="card-body">
-            {/* Search doctors sub-form */}
-            <form onSubmit={searchDoctors} style={{ marginBottom: '20px' }}>
-              <label>
-                <span className="form-label">Search Specialist</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <div className="search-input-wrap">
-                    <Search size={16} />
-                    <input
-                      value={doctorQuery}
-                      maxLength={100}
-                      onChange={(e) => setDoctorQuery(e.target.value)}
-                      placeholder="Doctor name or specialty (e.g. Cardiology)"
-                    />
-                  </div>
-                  <button type="submit" className="btn btn-secondary">
-                    Search
-                  </button>
-                </div>
-              </label>
-            </form>
-
             <form className="stacked-form" onSubmit={submit}>
-              {/* Doctor select */}
-              <div>
-                <label>
-                  <span className="form-label">Select Doctor *</span>
-                  <select
-                    required
-                    value={doctorId}
-                    onChange={(e) => {
-                      setDoctorId(e.target.value);
-                      setAvailable(null);
-                    }}
-                  >
-                    <option value="">-- Choose a doctor --</option>
-                    {doctorList?.data.map((doctor) => (
-                      <option key={doctor.id} value={doctor.id}>
-                        Dr. {doctor.full_name} — {doctor.specialization || 'General Medicine'}
-                        {doctor.experience_years ? ` (${doctor.experience_years} yrs exp)` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <div className="card" style={{ background: 'var(--color-bg)' }}><div className="card-body">
+                <span className="form-label">Selected doctor</span>
+                <strong>{selectedDoctor ? `Dr. ${selectedDoctor.full_name} - ${selectedDoctor.specialization}` : 'Loading doctor...'}</strong>
+              </div></div>
 
-                {doctorList && doctorList.pagination.pages > 1 && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginTop: '8px',
-                      fontSize: '0.75rem',
-                      color: 'var(--color-text-muted)'
-                    }}
-                  >
-                    <span>
-                      Page {doctorList.pagination.page} of {doctorList.pagination.pages}
-                    </span>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        disabled={doctorPage <= 1}
-                        onClick={() => {
-                          const next = doctorPage - 1;
-                          setDoctorPage(next);
-                          void loadDoctors(doctorQuery, next);
-                        }}
-                      >
-                        <ChevronLeft size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        disabled={doctorPage >= doctorList.pagination.pages}
-                        onClick={() => {
-                          const next = doctorPage + 1;
-                          setDoctorPage(next);
-                          void loadDoctors(doctorQuery, next);
-                        }}
-                      >
-                        <ChevronRight size={14} />
-                      </button>
-                    </div>
+              <div className="card" style={{ background: 'var(--color-primary-light)', borderColor: 'var(--color-primary)' }}>
+                <div className="card-body" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <MapPin size={20} color="var(--color-primary)" />
+                  <div>
+                    <span className="form-label">Clinic location</span>
+                    <p style={{ margin: 0, color: 'var(--color-text)', fontWeight: 600 }}>
+                      {selectedDoctor ? selectedDoctor.clinic_location || 'The clinic has not added a location yet.' : 'Loading clinic location...'}
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Start & End Time */}
+              {/* Date and fixed 30-minute start slot */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <label>
-                  <span className="form-label">Preferred Start Time *</span>
+                  <span className="form-label">Appointment Date *</span>
                   <input
                     required
-                    type="datetime-local"
-                    value={startAt}
-                    onChange={(e) => {
-                      setStartAt(e.target.value);
-                      setAvailable(null);
-                    }}
+                    type="date"
+                    min={localInputValue(new Date()).slice(0, 10)}
+                    value={appointmentDate}
+                    onChange={(e) => updateAppointmentSlot(e.target.value, appointmentTime)}
                   />
                 </label>
                 <label>
-                  <span className="form-label">Preferred End Time *</span>
-                  <input
+                  <span className="form-label">Available 30-Minute Slot *</span>
+                  <select
                     required
-                    type="datetime-local"
-                    value={endAt}
-                    onChange={(e) => {
-                      setEndAt(e.target.value);
-                      setAvailable(null);
-                    }}
-                  />
+                    value={appointmentTime}
+                    disabled={!appointmentDate}
+                    onChange={(e) => updateAppointmentSlot(appointmentDate, e.target.value)}
+                  >
+                    <option value="">Choose a time</option>
+                    {APPOINTMENT_TIME_SLOTS.map((slot) => <option key={slot} value={slot}>{slot}</option>)}
+                  </select>
                 </label>
               </div>
+              {startAt && endAt && <p className="text-sm text-muted" style={{ margin: '-8px 0 0' }}>Each appointment is 30 minutes, ending at {new Date(endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.</p>}
 
               {/* Availability check bar */}
               <div
@@ -305,7 +235,7 @@ export default function BookAppointmentPage() {
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
-                  disabled={!doctorId || !startAt || !endAt || checkingAvailability}
+                  disabled={!doctorId || !selectedDoctor || !startAt || !endAt || checkingAvailability}
                   onClick={() => void checkAvailability()}
                 >
                   <Clock size={14} />
@@ -351,7 +281,7 @@ export default function BookAppointmentPage() {
                 </Link>
                 <button
                   type="submit"
-                  disabled={booking || !doctorId || !startAt || !endAt}
+                  disabled={booking || !doctorId || !selectedDoctor || !startAt || !endAt}
                   className={`btn btn-primary ${booking ? 'btn-loading' : ''}`}
                 >
                   <CalendarDays size={16} />
@@ -415,6 +345,15 @@ export default function BookAppointmentPage() {
                     <span className="text-xs text-muted">Verification</span>
                     <p style={{ fontWeight: 600, color: 'var(--color-success)', margin: '2px 0 0 0' }}>
                       Verified Staff
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '14px' }}>
+                  <MapPin size={16} color="var(--color-primary)" />
+                  <div>
+                    <span className="text-xs text-muted">Clinic location</span>
+                    <p style={{ margin: '2px 0 0', fontWeight: 600 }}>
+                      {selectedDoctor.clinic_location || 'The clinic has not added a location yet.'}
                     </p>
                   </div>
                 </div>

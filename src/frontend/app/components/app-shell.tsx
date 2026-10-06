@@ -5,10 +5,13 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '../auth-provider';
 import {
   LayoutDashboard, CalendarDays, FileText, User, Users, UserCog,
-  Stethoscope, ClipboardList, LogOut, Menu, X, Shield, ChevronRight,
-  Lock, Search
+  Stethoscope, LogOut, Menu, X, Shield, ChevronRight,
+  Lock, Search, Bell, MapPin
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { apiRequest } from '@/lib/api';
+import { Appointment, AppointmentListing } from '@/lib/appointments';
+import { useToast } from './toast-provider';
 
 type NavItem = {
   label: string;
@@ -22,7 +25,6 @@ function getNavItems(role: string): { main: NavItem[]; section?: string; seconda
       main: [
         { label: 'Dashboard', href: '/patient/dashboard', icon: <LayoutDashboard /> },
         { label: 'Appointments', href: '/patient/appointments', icon: <CalendarDays /> },
-        { label: 'Book Visit', href: '/patient/book-appointment', icon: <ClipboardList /> },
         { label: 'Medical Records', href: '/patient/medical-records', icon: <FileText /> },
         { label: 'Find Doctors', href: '/patient/doctors', icon: <Search /> },
       ],
@@ -97,6 +99,40 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [appointmentReminders, setAppointmentReminders] = useState<Appointment[] | null>(null);
+  const { info } = useToast();
+
+  useEffect(() => {
+    if (!user || user.role !== 'PATIENT') return;
+    let active = true;
+    const checkReminders = async () => {
+      try {
+        const listing = await apiRequest<AppointmentListing>('/appointments/my?period=upcoming&limit=100');
+        if (!active) return;
+        const now = Date.now();
+        const reminders = listing.data.filter((appointment) => {
+          const startsAt = new Date(appointment.start_at).getTime();
+          return startsAt >= now && startsAt - now <= 60 * 60 * 1000;
+        });
+        setAppointmentReminders(reminders);
+        for (const appointment of reminders) {
+          const startsAt = new Date(appointment.start_at).getTime();
+          const key = `medidesk:appointment-reminder:${appointment.id}`;
+          if (startsAt >= now && startsAt - now <= 60 * 60 * 1000 && !localStorage.getItem(key)) {
+            localStorage.setItem(key, 'sent');
+            const location = appointment.doctor.clinic_location ? ` at ${appointment.doctor.clinic_location}` : '';
+            info(`Reminder: appointment with Dr. ${appointment.doctor.full_name}${location} starts within 1 hour.`);
+          }
+        }
+      } catch {
+        if (active) setAppointmentReminders([]);
+      }
+    };
+    void checkReminders();
+    const timer = window.setInterval(() => void checkReminders(), 60_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [user, info]);
 
   // For non-authenticated pages or landing, render children directly
   if (!user) return <>{children}</>;
@@ -201,6 +237,53 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="navbar-right">
+            {user.role === 'PATIENT' && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  aria-label={`Notifications, ${appointmentReminders?.length ?? 0} appointments in the next hour`}
+                  aria-expanded={notificationsOpen}
+                  onClick={() => setNotificationsOpen((open) => !open)}
+                  style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Bell size={18} />
+                  {!!appointmentReminders?.length && (
+                    <span style={{ position: 'absolute', top: 0, right: 0, minWidth: '17px', height: '17px', padding: '0 4px', borderRadius: '999px', background: 'var(--color-danger)', color: '#fff', fontSize: '0.65rem', lineHeight: '17px' }}>
+                      {appointmentReminders.length}
+                    </span>
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <div role="dialog" aria-label="Appointment notifications" style={{ position: 'absolute', zIndex: 50, top: 'calc(100% + 10px)', right: 0, width: 'min(360px, calc(100vw - 32px))', padding: '16px', background: 'var(--color-surface)', border: '1px solid var(--color-border-light)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)' }}>
+                    <h3 style={{ margin: '0 0 12px', fontSize: '1rem' }}>Appointments in the next hour</h3>
+                    {appointmentReminders === null ? (
+                      <p className="text-sm text-muted" style={{ margin: 0 }}>Checking upcoming appointments...</p>
+                    ) : appointmentReminders.length === 0 ? (
+                      <p className="text-sm text-muted" style={{ margin: 0 }}>No appointments starting within the next hour.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {appointmentReminders.map((appointment) => (
+                          <Link
+                            key={appointment.id}
+                            href="/patient/appointments"
+                            onClick={() => setNotificationsOpen(false)}
+                            style={{ display: 'block', padding: '12px', borderRadius: 'var(--radius-md)', background: 'var(--color-bg)', color: 'inherit', textDecoration: 'none' }}
+                          >
+                            <strong>Dr. {appointment.doctor.full_name}</strong>
+                            <div className="text-sm" style={{ marginTop: '4px' }}>{new Date(appointment.start_at).toLocaleString()}</div>
+                            <div className="text-sm text-muted" style={{ display: 'flex', gap: '5px', marginTop: '4px' }}>
+                              <MapPin size={14} />
+                              <span>{appointment.doctor.clinic_location || 'Clinic location not available'}</span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="navbar-security-badge">
               <Lock size={14} />
               <span>Secure session</span>

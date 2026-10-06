@@ -23,6 +23,8 @@ type RecordItem = {
   diagnosis: string | null;
   notes: string | null;
   prescription: string | null;
+  weight_kg: number | null;
+  patient_age: number | null;
   created_at: string;
   doctor: { full_name: string; specialization: string | null };
 };
@@ -189,6 +191,18 @@ export default function PatientMedicalRecordsPage() {
                     </p>
                   </div>
                 )}
+                {record.patient_age !== null && (
+                  <div>
+                    <span className="text-xs text-muted">Age at consultation</span>
+                    <p style={{ margin: '2px 0 0', fontWeight: 600 }}>{record.patient_age} years</p>
+                  </div>
+                )}
+                {record.weight_kg !== null && (
+                  <div>
+                    <span className="text-xs text-muted">Weight</span>
+                    <p style={{ margin: '2px 0 0', fontWeight: 600 }}>{record.weight_kg} kg</p>
+                  </div>
+                )}
               </div>
 
               <div className="card-footer" style={{ justifyContent: 'space-between' }}>
@@ -289,6 +303,19 @@ export default function PatientMedicalRecordsPage() {
                   {selected.notes || 'No confidential clinical notes attached.'}
                 </div>
               </div>
+
+              {selected.patient_age !== null && (
+                <div>
+                  <span className="text-xs text-muted">Age at consultation</span>
+                  <p style={{ margin: '4px 0 0', fontWeight: 600 }}>{selected.patient_age} years</p>
+                </div>
+              )}
+              {selected.weight_kg !== null && (
+                <div>
+                  <span className="text-xs text-muted">Weight at consultation</span>
+                  <p style={{ margin: '4px 0 0', fontWeight: 600 }}>{selected.weight_kg} kg</p>
+                </div>
+              )}
 
               <div>
                 <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>

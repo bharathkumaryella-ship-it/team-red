@@ -24,6 +24,7 @@ type DoctorProfile = {
   specialization: string;
   experience_years: number | null;
   bio: string | null;
+  clinic_location: string | null;
   license_number: string;
   is_active: boolean;
 };
@@ -202,6 +203,13 @@ export default function DoctorProfilePage() {
                     placeholder="Describe clinical background, research areas, and approach to care..."
                     defaultValue={profile.bio || ''}
                   />
+                </label>
+              </div>
+
+              <div>
+                <label>
+                  <span className="form-label">Clinic Location</span>
+                  <textarea name="clinic_location" maxLength={500} rows={2} defaultValue={profile.clinic_location || ''} placeholder="Clinic name, street address, city" />
                 </label>
               </div>
 

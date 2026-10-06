@@ -18,6 +18,8 @@ class MedicalRecord(db.Model):
     diagnosis = db.Column(EncryptedText(), nullable=True)
     notes = db.Column(EncryptedText(), nullable=True)
     prescription = db.Column(EncryptedText(), nullable=True)
+    weight_kg = db.Column(EncryptedText(), nullable=True)
+    patient_age = db.Column(EncryptedText(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -39,6 +41,8 @@ class MedicalRecord(db.Model):
         diagnosis: str | None = None,
         notes: str | None = None,
         prescription: str | None = None,
+        weight_kg: str | None = None,
+        patient_age: str | None = None,
         **kwargs,
     ):
         self.patient_id = patient_id
@@ -47,6 +51,8 @@ class MedicalRecord(db.Model):
         self.diagnosis = diagnosis
         self.notes = notes
         self.prescription = prescription
+        self.weight_kg = weight_kg
+        self.patient_age = patient_age
         for k, v in kwargs.items():
             setattr(self, k, v)
 

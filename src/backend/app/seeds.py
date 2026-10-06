@@ -159,6 +159,7 @@ def seed_development_data():
             license_number="MD-BROWN-001",
             experience_years=15,
             bio="Specialized in cardiac care and preventive heart health.",
+            clinic_location="MediDesk Central Clinic, 12 Lake View Road, Hyderabad",
         ),
         DoctorProfile(
             user_id=doctors[1].id,
@@ -166,6 +167,7 @@ def seed_development_data():
             license_number="MD-DAVIS-002",
             experience_years=8,
             bio="Comprehensive primary care and patient wellness.",
+            clinic_location="MediDesk North Clinic, 4 Jubilee Hills Road, Hyderabad",
         ),
         DoctorProfile(
             user_id=doctors[2].id,
@@ -173,6 +175,7 @@ def seed_development_data():
             license_number="MD-CHEN-003",
             experience_years=12,
             bio="Board-certified pediatrician providing comprehensive child and adolescent healthcare.",
+            clinic_location="MediDesk Children's Clinic, Banjara Hills, Hyderabad",
         ),
         DoctorProfile(
             user_id=doctors[3].id,
@@ -180,6 +183,7 @@ def seed_development_data():
             license_number="MD-WILSON-004",
             experience_years=18,
             bio="Expertise in adult neurology, migraines, memory disorders, and neuro-diagnostics.",
+            clinic_location="MediDesk Neuro Care, Somajiguda, Hyderabad",
         ),
         DoctorProfile(
             user_id=doctors[4].id,
@@ -187,6 +191,7 @@ def seed_development_data():
             license_number="MD-PATEL-005",
             experience_years=10,
             bio="Specializing in medical and surgical dermatology, skin cancer screenings, and eczema.",
+            clinic_location="MediDesk Skin Clinic, Madhapur, Hyderabad",
         ),
         DoctorProfile(
             user_id=doctors[5].id,
@@ -194,6 +199,7 @@ def seed_development_data():
             license_number="MD-MILLER-006",
             experience_years=14,
             bio="Orthopedic specialist focusing on joint restoration, sports injuries, and rehabilitation.",
+            clinic_location="MediDesk Orthopedic Center, Gachibowli, Hyderabad",
         ),
         DoctorProfile(
             user_id=doctors[6].id,
@@ -201,6 +207,7 @@ def seed_development_data():
             license_number="MD-ROSTOVA-007",
             experience_years=11,
             bio="Compassionate mental health professional specializing in mood and anxiety disorders.",
+            clinic_location="MediDesk Wellness Clinic, Kondapur, Hyderabad",
         ),
         DoctorProfile(
             user_id=doctors[7].id,
@@ -208,6 +215,7 @@ def seed_development_data():
             license_number="MD-KIM-008",
             experience_years=16,
             bio="Dedicated oncologist with extensive experience in targeted therapies and clinical care.",
+            clinic_location="MediDesk Cancer Care Center, Hitech City, Hyderabad",
         ),
     ]
     db.session.add_all(doctor_profiles)
@@ -266,6 +274,20 @@ def seed_development_data():
             diagnosis="Preventive Care Record",
             notes="Baseline health metrics recorded. All vitals normal.",
             prescription="Continue current lifestyle",
+        ),
+        MedicalRecord(
+            patient_id=patients[0].id,
+            doctor_id=doctors[0].id,
+            diagnosis="Seasonal allergic rhinitis",
+            notes="Reports three weeks of sneezing, nasal congestion, and itchy eyes, worse outdoors. No fever, wheezing, or shortness of breath. Examination showed pale nasal mucosa; lungs clear. Discussed pollen avoidance, saline rinses, and follow-up if symptoms persist or worsen.",
+            prescription="Cetirizine 10 mg by mouth once daily as needed. Use saline nasal rinse once daily. Seek urgent care for breathing difficulty.",
+        ),
+        MedicalRecord(
+            patient_id=patients[0].id,
+            doctor_id=doctors[1].id,
+            diagnosis="Vitamin D insufficiency",
+            notes="Routine follow-up reviewed a low 25-hydroxy vitamin D result of 18 ng/mL. Patient denies bone pain or muscle weakness. Discussed dietary sources, safe sunlight exposure, and repeat laboratory testing in 12 weeks.",
+            prescription="Cholecalciferol 1,000 IU by mouth daily with food for 12 weeks; repeat vitamin D level at follow-up.",
         ),
     ]
     db.session.add_all(medical_records)

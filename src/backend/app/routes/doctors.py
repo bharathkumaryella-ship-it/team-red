@@ -21,7 +21,7 @@ from app.services.management import (
 
 doctors_bp = Blueprint("doctors", __name__, url_prefix="/api/doctors")
 logger = logging.getLogger("management")
-DOCTOR_FIELDS = {"full_name", "phone", "specialization", "experience_years", "bio"}
+DOCTOR_FIELDS = {"full_name", "phone", "specialization", "experience_years", "bio", "clinic_location"}
 
 
 @doctors_bp.route("/me", methods=["GET"])
@@ -71,6 +71,11 @@ def update_my_doctor_profile():
         if value is not None and value != "" and not valid_profile_text(value, 2000):
             return api_error("Bio must be 2,000 characters or fewer.", 400)
         profile.bio = value.strip() or None if isinstance(value, str) else value
+    if "clinic_location" in payload:
+        value = payload["clinic_location"]
+        if value is not None and value != "" and not valid_profile_text(value, 500):
+            return api_error("Clinic location must be 500 characters or fewer.", 400)
+        profile.clinic_location = value.strip() or None if isinstance(value, str) else value
 
     db.session.commit()
     logger.info("Doctor updated own profile (user_id=%s)", user.id)

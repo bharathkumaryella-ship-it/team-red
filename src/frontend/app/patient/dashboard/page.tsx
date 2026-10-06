@@ -82,7 +82,7 @@ export default function PatientDashboard() {
           <p>Here&apos;s an overview of your healthcare activity.</p>
         </div>
         <div className="page-header-actions">
-          <Link href="/patient/book-appointment" className="btn btn-primary">
+          <Link href="/patient/doctors" className="btn btn-primary">
             <ClipboardList size={16} />
             Book appointment
           </Link>
@@ -145,6 +145,7 @@ export default function PatientDashboard() {
                       <div className="appointment-card-details">
                         <div className="appointment-card-doctor">{apt.doctor.full_name}</div>
                         <div className="appointment-card-spec">{apt.doctor.specialization || 'Doctor'}</div>
+                        {apt.doctor.clinic_location && <div className="text-xs text-muted">Clinic: {apt.doctor.clinic_location}</div>}
                         <div className="appointment-card-datetime">
                           {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(apt.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
@@ -165,7 +166,7 @@ export default function PatientDashboard() {
                 <div className="empty-state-icon"><CalendarDays /></div>
                 <h3>No upcoming appointments</h3>
                 <p>Book your next visit with one of our doctors.</p>
-                <Link href="/patient/book-appointment" className="btn btn-primary btn-sm">
+                <Link href="/patient/doctors" className="btn btn-primary btn-sm">
                   Book appointment
                 </Link>
               </div>
@@ -177,7 +178,7 @@ export default function PatientDashboard() {
         <div className="animate-in animate-in-delay-4">
           <h2 style={{ marginBottom: 16, fontSize: '1.1rem' }}>Quick actions</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Link href="/patient/book-appointment" className="quick-action">
+            <Link href="/patient/doctors" className="quick-action">
               <div className="quick-action-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
                 <ClipboardList />
               </div>

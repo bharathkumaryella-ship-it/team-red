@@ -97,7 +97,7 @@ export default function PatientAppointmentsPage() {
           <p>View, schedule, and track all your healthcare consultations.</p>
         </div>
         <div className="page-header-actions">
-          <Link href="/patient/book-appointment" className="btn btn-primary">
+          <Link href="/patient/doctors" className="btn btn-primary">
             <Plus size={16} />
             <span>Book Appointment</span>
           </Link>
@@ -158,7 +158,7 @@ export default function PatientAppointmentsPage() {
             </div>
             <h3>No appointments found</h3>
             <p>You have no appointments matching your selected filters. Schedule a visit with a doctor whenever you need care.</p>
-            <Link href="/patient/book-appointment" className="btn btn-primary">
+                <Link href="/patient/doctors" className="btn btn-primary">
               <Plus size={16} />
               <span>Book Your First Appointment</span>
             </Link>
@@ -202,7 +202,10 @@ export default function PatientAppointmentsPage() {
                             >
                               {item.doctor.full_name.charAt(0)}
                             </div>
-                            <span style={{ fontWeight: 600 }}>{item.doctor.full_name}</span>
+                            <div>
+                              <span style={{ fontWeight: 600 }}>{item.doctor.full_name}</span>
+                              {item.doctor.phone && <div className="text-xs text-muted"><a href={`tel:${item.doctor.phone}`}>{item.doctor.phone}</a></div>}
+                            </div>
                           </div>
                         </td>
                         <td>
@@ -330,6 +333,8 @@ export default function PatientAppointmentsPage() {
                     {detail.doctor.full_name}
                   </p>
                   <p className="text-sm text-muted">{detail.doctor.specialization || 'General Healthcare'}</p>
+                  {detail.doctor.phone && <p className="text-sm">Phone: <a href={`tel:${detail.doctor.phone}`}>{detail.doctor.phone}</a></p>}
+                  {detail.doctor.clinic_location && <p className="text-sm">Clinic: {detail.doctor.clinic_location}</p>}
                 </div>
 
                 <div>

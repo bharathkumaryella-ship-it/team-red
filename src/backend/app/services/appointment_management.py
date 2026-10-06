@@ -58,11 +58,22 @@ def appointment_data(appointment: Appointment, viewer: User) -> dict:
             "id": doctor.id,
             "full_name": doctor.full_name,
             "specialization": doctor.doctor_profile.specialization if doctor.doctor_profile else None,
+            "clinic_location": doctor.doctor_profile.clinic_location if doctor.doctor_profile else None,
         },
     }
     if viewer.role == UserRole.PATIENT:
+        data["doctor"]["phone"] = doctor.phone
         return data
     data["patient"] = {"id": patient.id, "full_name": patient.full_name}
+    if viewer.role == UserRole.DOCTOR:
+        date_of_birth = patient.patient_profile.date_of_birth if patient.patient_profile else None
+        if date_of_birth:
+            today = date.today()
+            data["patient"]["age"] = today.year - date_of_birth.year - (
+                (today.month, today.day) < (date_of_birth.month, date_of_birth.day)
+            )
+        else:
+            data["patient"]["age"] = None
     if viewer.role == UserRole.ADMIN:
         data.pop("reason")
     return data

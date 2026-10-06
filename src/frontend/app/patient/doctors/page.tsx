@@ -8,7 +8,6 @@ import {
   Stethoscope,
   Search,
   Award,
-  CalendarDays,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
@@ -22,6 +21,7 @@ type Doctor = {
   specialization: string;
   experience_years: number | null;
   bio: string | null;
+  clinic_location: string | null;
 };
 
 type Listing = { data: Doctor[]; pagination: { page: number; pages: number; total: number } };
@@ -63,12 +63,6 @@ export default function DoctorDirectoryPage() {
         <div className="page-header-content">
           <h1>Find a Doctor</h1>
           <p>Discover board-certified physicians, clinical specialists, and medical experts.</p>
-        </div>
-        <div className="page-header-actions">
-          <Link href="/patient/book-appointment" className="btn btn-primary">
-            <CalendarDays size={16} />
-            <span>Book Appointment</span>
-          </Link>
         </div>
       </div>
 
@@ -177,6 +171,7 @@ export default function DoctorDirectoryPage() {
                   >
                     {doctor.bio || 'Dedicated clinical specialist committed to patient wellness, accurate diagnostics, and compassionate healthcare.'}
                   </p>
+                  {doctor.clinic_location && <p className="text-sm text-muted" style={{ margin: '0 0 14px' }}>Clinic: {doctor.clinic_location}</p>}
 
                   <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
                     <Link
@@ -187,7 +182,7 @@ export default function DoctorDirectoryPage() {
                       <span>View Profile</span>
                     </Link>
                     <Link
-                      href={`/patient/book-appointment`}
+                      href={`/patient/book-appointment?doctorId=${doctor.id}`}
                       className="btn btn-primary btn-sm"
                       style={{ flex: 1 }}
                     >

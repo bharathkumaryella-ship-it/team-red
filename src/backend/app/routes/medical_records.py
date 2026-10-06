@@ -1,6 +1,7 @@
 """Patient-owned and doctor-assigned medical record APIs."""
 
 import logging
+from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -23,6 +24,8 @@ def _record_data(record, *, doctor_view=False):
         "diagnosis": record.diagnosis,
         "notes": record.notes,
         "prescription": record.prescription,
+        "weight_kg": float(record.weight_kg) if record.weight_kg is not None else None,
+        "patient_age": int(record.patient_age) if record.patient_age is not None else None,
         "created_at": record.created_at.isoformat() + "Z",
         "updated_at": record.updated_at.isoformat() + "Z",
         "doctor": {
@@ -32,14 +35,21 @@ def _record_data(record, *, doctor_view=False):
         },
     }
     if doctor_view:
-        data["patient"] = {"id": record.patient.id, "full_name": record.patient.full_name}
+        profile = record.patient.patient_profile
+        date_of_birth = profile.date_of_birth if profile else None
+        today = datetime.now().date()
+        profile_age = None if not date_of_birth else today.year - date_of_birth.year - (
+            (today.month, today.day) < (date_of_birth.month, date_of_birth.day)
+        )
+        age = int(record.patient_age) if record.patient_age is not None else profile_age
+        data["patient"] = {"id": record.patient.id, "full_name": record.patient.full_name, "age": age}
     return data
 
 
 def _validated_fields(payload, *, create):
     if not isinstance(payload, dict):
         return None, api_error("A JSON object is required.", 400, "INVALID_FIELDS")
-    allowed = {"appointment_id", *MAX_TEXT} if create else set(MAX_TEXT)
+    allowed = {"appointment_id", "weight_kg", "patient_age", *MAX_TEXT} if create else {"weight_kg", "patient_age", *MAX_TEXT}
     if not payload or set(payload) - allowed or (create and "appointment_id" not in payload):
         return None, api_error("Only the permitted medical record fields are accepted.", 400, "INVALID_FIELDS")
     if create:
@@ -57,6 +67,22 @@ def _validated_fields(payload, *, create):
         if field == "diagnosis" and not value:
             return None, api_error("diagnosis is required and cannot be blank.", 400, "INVALID_FIELDS")
         parsed[field] = value or None
+    if "weight_kg" in payload:
+        weight = payload["weight_kg"]
+        if weight is None:
+            parsed["weight_kg"] = None
+        elif not isinstance(weight, (int, float)) or isinstance(weight, bool) or not 0.1 <= weight <= 500:
+            return None, api_error("weight_kg must be between 0.1 and 500 kilograms.", 400, "INVALID_FIELDS")
+        else:
+            parsed["weight_kg"] = f"{weight:.2f}"
+    if "patient_age" in payload:
+        age = payload["patient_age"]
+        if age is None:
+            parsed["patient_age"] = None
+        elif not isinstance(age, int) or isinstance(age, bool) or not 0 <= age <= 130:
+            return None, api_error("patient_age must be a whole number between 0 and 130.", 400, "INVALID_FIELDS")
+        else:
+            parsed["patient_age"] = str(age)
     if create and "diagnosis" not in parsed:
         return None, api_error("diagnosis is required.", 400, "INVALID_FIELDS")
     return ({"appointment_id": payload.get("appointment_id"), **parsed}, None)
@@ -90,7 +116,8 @@ def create_medical_record():
         db.session.rollback()
         return api_error("A medical record already exists for this appointment.", 409, "RECORD_EXISTS")
     record = MedicalRecord(patient_id=appointment.patient_id, doctor_id=user.id, appointment_id=appointment.id,
-                           diagnosis=fields["diagnosis"], notes=fields.get("notes"), prescription=fields.get("prescription"))
+                           diagnosis=fields["diagnosis"], notes=fields.get("notes"), prescription=fields.get("prescription"),
+                           weight_kg=fields.get("weight_kg"), patient_age=fields.get("patient_age"))
     db.session.add(record)
     try:
         db.session.commit()
