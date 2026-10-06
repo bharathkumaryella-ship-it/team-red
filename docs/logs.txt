@@ -10886,3 +10886,25 @@ Actions Taken:
 * Reviewed AGENTS.md, onboarding status, docs/APPROACH.md, README.md, FINAL_SECURITY_REPORT.md, and backend route registration.
 * Created the full jury presentation with speaker notes and Q&A.
 * Avoided opening the encryption key file shown in the IDE.
+
+================================================================================
+[2026-10-06T09:31:38+05:30] Record Jury Presentation Commit SHA
+================================================================================
+User Prompt (verbatim):
+now i want full presentation of this project to explain it to jury in detail
+
+Agent Response:
+Committed the jury presentation and its activity-log entry as `e54d6d8` (`docs: add MediDesk jury presentation`). I’m recording that SHA for traceability before pushing it to the team remote.
+
+Agent Response Summary:
+The reusable presentation file is committed. The feature commit SHA is recorded here; the commit will be pushed to origin/main.
+
+Commit SHA:
+e54d6d8
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Committed docs/JURY_PRESENTATION.md and the corresponding turn log as e54d6d8.
+* Recorded the resulting feature commit SHA.
