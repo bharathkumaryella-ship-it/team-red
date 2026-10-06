@@ -1,2 +1,8 @@
+[project]
+name = "medidesk"
+version = "1.0.0"
+description = "MediDesk Flask Backend"
+requires-python = ">=3.10"
+
 [tool.vercel]
 entrypoint = "run:app"
