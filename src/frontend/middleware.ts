@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
-  const apiOrigin = new URL(
-    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
-  ).origin;
+  const apiOrigin = process.env.NEXT_PUBLIC_API_URL
+    ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
+    : '';
   const isDev = process.env.NODE_ENV !== 'production';
 
   const scriptDirectives = isDev
@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
-    `connect-src 'self' ${apiOrigin} ws: wss:`,
+    `connect-src 'self' ${apiOrigin} ws: wss:`.trim(),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -1,4 +1,4 @@
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
 export type User = {
   id: number;

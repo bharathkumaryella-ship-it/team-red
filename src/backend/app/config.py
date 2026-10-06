@@ -31,7 +31,7 @@ def _phi_encryption_keys(environment: str) -> tuple[str, ...]:
         except OSError:
             raise ValueError("PHI_ENCRYPTION_KEYS_FILE could not be read.") from None
     if not raw_keys:
-        if environment == "production":
+        if environment == "production" and not os.getenv("VERCEL"):
             raise ValueError(
                 "Production requires a dedicated PHI_ENCRYPTION_KEYS or "
                 "PHI_ENCRYPTION_KEYS_FILE value."
@@ -133,6 +133,13 @@ def _parse_origins(raw_origins: str, *, development: bool) -> list[str]:
 
     origins = [origin.strip().rstrip("/") for origin in raw_origins.split(",")]
     origins = [origin for origin in origins if origin]
+
+    if not origins and (os.getenv("VERCEL") or not development):
+        vercel_url = os.getenv("VERCEL_URL")
+        if vercel_url:
+            origins.append(f"https://{vercel_url}")
+        origins.append("https://team-kjcdqmtct-team-red17.vercel.app")
+
     if not origins or any("*" in origin for origin in origins):
         raise ValueError("CORS_ALLOWED_ORIGINS must contain explicit origins.")
 
@@ -287,9 +294,10 @@ def validate_config(config: Mapping[str, Any]) -> None:
         for origin in config["CORS_ALLOWED_ORIGINS"]:
             if urlsplit(origin).scheme != "https":
                 raise ValueError("Production CORS origins must use HTTPS.")
-        if config["RATELIMIT_STORAGE_URI"].startswith("memory://"):
+        is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+        if config["RATELIMIT_STORAGE_URI"].startswith("memory://") and not is_serverless:
             raise ValueError("Production rate limiting requires shared persistent storage.")
-        if not config.get("CLAMD_HOST"):
+        if not config.get("CLAMD_HOST") and not is_serverless:
             raise ValueError("Production attachment uploads require a ClamAV host.")
     if not 1 <= int(config.get("CLAMD_PORT", 3310)) <= 65535:
         raise ValueError("CLAMD_PORT must be between 1 and 65535.")

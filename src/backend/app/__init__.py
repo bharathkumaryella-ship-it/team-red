@@ -114,12 +114,20 @@ def create_app(
             request_origin = _normalized_origin(origin) if origin else None
             if not origin and referer:
                 request_origin = _normalized_origin(referer, allow_path=True)
+
+            host_header = request.headers.get("Host") or request.host
+            is_same_origin = False
+            if request_origin and host_header:
+                parsed_req_origin = urlsplit(request_origin)
+                if parsed_req_origin.netloc.lower() == host_header.lower():
+                    is_same_origin = True
+
             if (origin or referer) and not request_origin:
                 return jsonify(error={
                     "code": "ORIGIN_NOT_ALLOWED",
                     "message": "The request origin is not allowed.",
                 }), 403
-            if request_origin and request_origin not in trusted_origins:
+            if request_origin and request_origin not in trusted_origins and not is_same_origin:
                 return jsonify(error={
                     "code": "ORIGIN_NOT_ALLOWED",
                     "message": "The request origin is not allowed.",
