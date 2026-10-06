@@ -11167,3 +11167,23 @@ Files Modified / Created:
 Actions Taken:
 * Re-read AGENTS.md and inspected the current diff, branch, and origin.
 * Confirmed the PostgreSQL implementation changes are limited to configuration, psycopg dependency, and documentation.
+================================================================================
+[2026-10-06T11:40:18+05:30] Record PostgreSQL Support Commit SHA
+================================================================================
+User Prompt (verbatim):
+push it to git
+
+Agent Response:
+Committed the PostgreSQL support and selected documentation changes as `63d2ae0` (`feat(db): support PostgreSQL deployments`). I am recording that feature commit SHA before pushing the branch.
+
+Agent Response Summary:
+Created a selective PostgreSQL deployment commit without staging the login-route edit, `.env`, or other unrelated changes. This entry records the feature SHA for traceability.
+
+Commit SHA:
+63d2ae0
+
+Files Modified / Created:
+* docs/logs.txt (Modified)
+
+Actions Taken:
+* Committed PostgreSQL URL normalization, psycopg dependency, deployment guidance, README, and architecture updates as 63d2ae0.
