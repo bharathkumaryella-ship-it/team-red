@@ -79,6 +79,32 @@ def test_create_derives_patient_and_doctor_from_completed_appointment(client, ap
         assert record.appointment_id == app.test_ids["completed"]
 
 
+def test_create_preserves_patient_age_and_weight_snapshot(client, app):
+    login(client, "doctor@example.test")
+    response = client.post("/api/medical-records", json={
+        "appointment_id": app.test_ids["completed"],
+        "diagnosis": "Routine check",
+        "patient_age": 33,
+        "weight_kg": 68.4,
+    })
+    assert response.status_code == 201
+    assert response.json["data"]["patient"]["age"] == 33
+    assert response.json["data"]["patient_age"] == 33
+    assert response.json["data"]["weight_kg"] == 68.4
+
+    with app.app_context():
+        record = db.session.get(MedicalRecord, response.json["data"]["id"])
+        assert int(record.patient_age) == 33
+        assert float(record.weight_kg) == 68.4
+
+    client.post("/api/auth/logout")
+    login(client, "patient@example.test")
+    patient_records = client.get("/api/patients/me/medical-records")
+    saved = next(item for item in patient_records.json["data"] if item["id"] == response.json["data"]["id"])
+    assert saved["patient_age"] == 33
+    assert saved["weight_kg"] == 68.4
+
+
 @pytest.mark.parametrize("email", ["patient@example.test", "admin@example.test"])
 def test_only_doctor_can_create(client, app, email):
     login(client, email)
@@ -102,6 +128,10 @@ def test_create_requires_assigned_completed_appointment_and_prevents_duplicates(
     {"appointment_id": 1, "diagnosis": "x", "doctor_id": 55},
     {"appointment_id": 1, "diagnosis": "x", "notes": []},
     {"appointment_id": 1, "diagnosis": "x" * 2001},
+    {"appointment_id": 1, "diagnosis": "x", "patient_age": True},
+    {"appointment_id": 1, "diagnosis": "x", "patient_age": 131},
+    {"appointment_id": 1, "diagnosis": "x", "weight_kg": False},
+    {"appointment_id": 1, "diagnosis": "x", "weight_kg": 500.1},
 ])
 def test_create_validates_input_and_rejects_mass_assignment(client, payload):
     login(client, "doctor@example.test")

@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  // Keep file tracing inside this app instead of walking up into unrelated
+  // lockfiles in the user's home directory (which can also fail in CI/sandbox).
+  outputFileTracingRoot: process.cwd(),
   async headers() {
     const headers = [
       { key: 'X-Content-Type-Options', value: 'nosniff' },

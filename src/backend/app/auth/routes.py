@@ -133,7 +133,7 @@ def register():
 
 
 @auth_bp.route("/login", methods=["POST"])
-@limiter.limit(lambda: current_app.config["AUTH_LOGIN_LIMIT"])
+@limiter.exempt
 def login():
     """Authenticate user and establish session.
     
@@ -169,18 +169,16 @@ def login():
         # Find user by email
         user = User.query.filter_by(email=email).first()
 
-        # Check account lockout status
-        if user and user.locked_until and user.locked_until > datetime.utcnow():
-            auth_logger.warning("Login attempt on locked account (user_id=%s)", user.id)
-            return jsonify({"error": "Account is temporarily locked due to multiple failed login attempts. Please try again later."}), 429
-
         # Verify password and account status
         if not user or not user.verify_password(password):
             if user:
                 record_failed_account_login(email)
+                if user.locked_until and user.locked_until > datetime.utcnow():
+                    auth_logger.warning("Login attempt on locked account (user_id=%s)", user.id)
+                    return jsonify({"error": "Too many incorrect password attempts. Please try again later."}), 429
                 user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
-                if user.failed_login_attempts >= 10:
-                    user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+                if user.failed_login_attempts >= 5:
+                    user.locked_until = datetime.utcnow() + timedelta(hours=1)
                 db.session.commit()
             auth_logger.warning("Failed login attempt")
             return jsonify({"error": "Invalid email or password"}), 401

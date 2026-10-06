@@ -271,7 +271,7 @@ export default function DoctorMedicalRecordsPage() {
                       autoComplete="off"
                     />
                     <datalist id="eligible-patients">
-                      {[...new Set(appointments.map((item) => item.patient?.full_name).filter((name): name is string => Boolean(name)))].map((name) => (
+                      {Array.from(new Set(appointments.map((item) => item.patient?.full_name).filter((name): name is string => Boolean(name)))).map((name) => (
                         <option key={name} value={name} />
                       ))}
                     </datalist>
